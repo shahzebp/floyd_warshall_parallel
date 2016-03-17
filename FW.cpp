@@ -64,10 +64,10 @@ int edges;
 
 int main(int argc, char *argv[])
 {      
-	vertices=maxVertices;
-	/*initialize dist between all pairs as infinity*/
+	char *arg_vertices = getenv("N_VERTICES");
+	vertices = atoi(arg_vertices);
+	
 	init(vertices);
-	/* vertices represent number of vertices and edges represent number of edges in the graph. */
 
 	for(int i = 0 ; i < vertices ; i++ )
 	{
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
 	}	
 
 
-	//FloydWarshall(vertices);
+	FloydWarshall(vertices);
 
 	for(int i = 0 ; i < vertices; i++ ) 
 	{

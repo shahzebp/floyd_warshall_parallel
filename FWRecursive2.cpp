@@ -133,11 +133,11 @@ void AFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 int edges;
 
 int main(int argc, char *argv[])
-{      
-	vertices = maxVertices;
-	/*initialize dist between all pairs as infinity*/
+{     
+ 	char *arg_vertices = getenv("N_VERTICES");
+	vertices = atoi(arg_vertices);
+	
 	init(vertices);
-	/* vertices represent number of vertices and edges represent number of edges in the graph. */
 
 	for(int i = 0 ; i < vertices ; i++ )
 	{
@@ -145,9 +145,16 @@ int main(int argc, char *argv[])
 		{
 			if( i == j )
 				dist[i][j] = 0;
-			else
-				dist[i][j] = i+j;
+			else {
+				int num = i + j;
 
+				if (num % 3 == 0)
+					 dist[i][j] = num / 2;
+				else if (num % 2 == 0)
+					 dist[i][j] = num * 2;
+				else
+					 dist[i][j] = num;
+			}
 		}
 	}	
 
