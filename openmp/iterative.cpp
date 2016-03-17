@@ -7,7 +7,7 @@ using namespace std;
 
 /* maxVertices represents maximum number of vertices that can be present in the graph. */
 #ifndef maxVertices
-#define maxVertices   16
+#define maxVertices   64
 #endif
 #define INF           INT_MAX-1
 
@@ -21,7 +21,9 @@ using namespace std;
 int min(int a,int b){return (a<b)?a:b;}
 
 int dist[maxVertices][maxVertices];
+omp_lock_t dist_locks[maxVertices][maxVertices];
 int vertices;
+
 void init(int n)
 {
   		
@@ -56,7 +58,9 @@ void FloydWarshall(int vertices)
                 {
                         if(from!=to && from!=via && to!=via)
 						{
+              omp_set_lock(&dist_locks[from][to]);
 							dist[from][to] = min(dist[from][to],dist[from][via]+dist[via][to]);
+              omp_unset_lock(&dist_locks[from][to]);
 						}
                         
                 }
@@ -77,20 +81,26 @@ int main(int argc, char *argv[])
 		
 omp_set_num_threads(NUM_THREADS);
 
-#pragma omp parallel for
-	for(int i = 0 ; i < vertices ; i++ )
-       {
-
-#pragma omp parallel for
-          for(int j = 0 ; j< vertices; j++ )       
-           {
-                if( i == j )
-					dist[i][j] = 0;
-				else
-                    dist[i][j] = i+j;
-                
-			}
-		}
+  #pragma omp parallel for
+  for(int i = 0 ; i < vertices ; i++ )
+  {
+    #pragma omp parallel for
+    for(int j = 0 ; j< vertices; j++ )       
+    {
+      if( i == j )
+        dist[i][j] = 0;
+      else {
+        int num = i + j;
+        if (num % 3 == 0)
+           dist[i][j] = num / 2;
+        else if (num % 2 == 0)
+           dist[i][j] = num * 2;
+        else
+           dist[i][j] = num;
+      }
+    }
+  } 
+  
 	
 
 		FloydWarshall(vertices);
