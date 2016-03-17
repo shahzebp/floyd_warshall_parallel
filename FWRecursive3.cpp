@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<iostream>
 #include <cstdlib>
-
+#include <cilkview.h>
 #include<limits.h>
 #include<algorithm>
 #include<cilk/cilk.h>
@@ -153,7 +153,8 @@ int main(int argc, char *argv[])
 {      
  	char *arg_vertices = getenv("N_VERTICES");
 	vertices = atoi(arg_vertices);
-	
+        cilkview_data_t d;
+        __cilkview_query(d);	
 	init(vertices);
 
 	for(int i = 0 ; i < vertices ; i++ )
@@ -176,7 +177,7 @@ int main(int argc, char *argv[])
 	}	
 
 	AFW(0, 0, 0, 0, 0, 0, vertices);
-
+	__cilkview_report(&d, NULL, "fwr3", CV_REPORT_WRITE_TO_RESULTS);
 	for(int i = 0 ; i < vertices; i++ ) 
 	{
 		cout << "\n";

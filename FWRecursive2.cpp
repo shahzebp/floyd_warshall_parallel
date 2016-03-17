@@ -3,6 +3,7 @@
 #include<limits.h>
 #include<algorithm>
 #include<cilk/cilk.h>
+#include <cilkview.h>
 using namespace std;
 
 /* maxVertices represents maximum number of vertices that can be present in the graph. */
@@ -136,7 +137,8 @@ int main(int argc, char *argv[])
 {     
  	char *arg_vertices = getenv("N_VERTICES");
 	vertices = atoi(arg_vertices);
-	
+        cilkview_data_t d;
+        __cilkview_query(d);	
 	init(vertices);
 
 	for(int i = 0 ; i < vertices ; i++ )
@@ -159,7 +161,7 @@ int main(int argc, char *argv[])
 	}	
 
 	AFW(0, 0, 0, 0, 0, 0, vertices);
-
+	__cilkview_report(&d, NULL, "fwr2", CV_REPORT_WRITE_TO_RESULTS);
 	for(int i = 0 ; i < vertices; i++ ) 
 	{
 		cout << "\n";
