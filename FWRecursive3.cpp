@@ -62,15 +62,17 @@ void DFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 		F_loop_FW(Xi, Xj, Ui, Uj, Vi, Vj, n);
 
 	else {
-		DFW(Xi, Xj, Ui, Uj, Vi, Vj, n/2);
-		DFW(Xi, Xj + n/2, Ui, Uj, Vi, Vj + n/2, n/2);
-		DFW(Xi + n/2, Xj, Ui + n/2, Uj, Vi, Vj, n/2);
+		cilk_spawn DFW(Xi, Xj, Ui, Uj, Vi, Vj, n/2);
+		cilk_spawn DFW(Xi, Xj + n/2, Ui, Uj, Vi, Vj + n/2, n/2);
+		cilk_spawn DFW(Xi + n/2, Xj, Ui + n/2, Uj, Vi, Vj, n/2);
 		DFW(Xi + n/2, Xj + n/2, Ui + n/2, Uj, Vi, Vj + n/2, n/2);
+		cilk_sync;
 
-		DFW(Xi, Xj, Ui, Uj + n/2, Vi + n/2, Vj, n/2);
-		DFW(Xi, Xj + n/2, Ui, Uj + n/2, Vi + n/2, Vj + n/2, n/2);
-		DFW(Xi + n/2, Xj, Ui + n/2, Uj + n/2, Vi + n/2, Vj, n/2);
+		cilk_spawn DFW(Xi, Xj, Ui, Uj + n/2, Vi + n/2, Vj, n/2);
+		cilk_spawn DFW(Xi, Xj + n/2, Ui, Uj + n/2, Vi + n/2, Vj + n/2, n/2);
+		cilk_spawn DFW(Xi + n/2, Xj, Ui + n/2, Uj + n/2, Vi + n/2, Vj, n/2);
 		DFW(Xi + n/2, Xj + n/2, Ui + n/2, Uj + n/2, Vi + n/2, Vj + n/2, n/2);
+		cilk_sync;
 	}
 }
 
