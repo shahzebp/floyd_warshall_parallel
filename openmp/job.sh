@@ -7,4 +7,7 @@
 
 export CILK_NWORKERS=32
 
-./fw > a_output
+./fw > out
+./fw1 > out1
+./fw2 > out2
+
