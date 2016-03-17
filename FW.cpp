@@ -9,7 +9,7 @@ using namespace std;
 
 /* maxVertices represents maximum number of vertices that can be present in the graph. */
 #ifndef maxVertices
-#define maxVertices   64
+#define maxVertices   8192
 #endif
 #define INF           INT_MAX-1
 

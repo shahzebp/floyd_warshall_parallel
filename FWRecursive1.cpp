@@ -7,7 +7,7 @@ using namespace std;
 
 /* maxVertices represents maximum number of vertices that can be present in the graph. */
 #ifndef maxVertices
-#define maxVertices   64
+#define maxVertices   8192
 #endif
 #define INF           INT_MAX-1
 
@@ -18,10 +18,11 @@ using namespace std;
 //int min(int a,int b){return (a<b)?a:b;}
 
 int dist[maxVertices][maxVertices];
+
 int vertices;
+
 void init(int n)
 {
-  
         cilk_for(int i=0;i<n;i++)
         {
                 cilk_for(int j=0;j<n;j++)
@@ -64,7 +65,7 @@ void AFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 	else {
 		AFW(Xi, Xj, Ui, Uj, Vi, Vj, n/2);
 
-		AFW(Xi, Xj + n/2, Ui, Uj, Vi, Vj + n/2, n/2);
+		cilk_spawn AFW(Xi, Xj + n/2, Ui, Uj, Vi, Vj + n/2, n/2);
 		AFW(Xi + n/2, Xj, Ui + n/2, Uj, Vi, Vj, n/2);
 		cilk_sync;
 		
@@ -85,11 +86,11 @@ int edges;
 
 int main(int argc, char *argv[])
 {      
-	vertices = maxVertices;
-	/*initialize dist between all pairs as infinity*/
+	char *arg_vertices = getenv("N_VERTICES");
+	vertices = atoi(arg_vertices);
+	
 	init(vertices);
-	/* vertices represent number of vertices and edges represent number of edges in the graph. */
-
+	
 	for(int i = 0 ; i < vertices ; i++ )
 	{
 		for(int j = 0 ; j< vertices; j++ )       

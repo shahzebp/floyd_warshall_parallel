@@ -7,4 +7,4 @@
 
 export CILK_NWORKERS=32
 
-./fw > a_output
+N_VERTICES=4096 ./fwr1 > a_fwr1_output
