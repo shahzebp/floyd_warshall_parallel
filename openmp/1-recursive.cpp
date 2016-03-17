@@ -7,7 +7,7 @@ using namespace std;
 
 /* maxVertices represents maximum number of vertices that can be present in the graph. */
 #ifndef maxVertices
-#define maxVertices   64
+#define maxVertices   1024
 #endif
 #define INF           INT_MAX-1
 
@@ -24,10 +24,10 @@ int vertices;
 void init(int n)
 {
   
-        #pragma omp parallel for
+        #pragma omp for nowait
         for(int i=0;i<n;i++)
         {
-                #pragma omp parallel for
+                #pragma omp for nowait
         for(int j=0;j<n;j++)
                 {
                         if(i==j)
@@ -72,10 +72,16 @@ void AFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 	else {
 		AFW(Xi, Xj, Ui, Uj, Vi, Vj, n/2);
 
-		#pragma omp parallel
-		{
-			AFW(Xi, Xj + n/2, Ui, Uj, Vi, Vj + n/2, n/2);
-			AFW(Xi + n/2, Xj, Ui + n/2, Uj, Vi, Vj, n/2);
+		#pragma omp parallel sections
+		{	
+			#pragma omp section
+			{
+				AFW(Xi, Xj + n/2, Ui, Uj, Vi, Vj + n/2, n/2);
+			}
+			#pragma omp section
+			{
+				AFW(Xi + n/2, Xj, Ui + n/2, Uj, Vi, Vj, n/2);
+			}
 		}
 		#pragma omp barrier
 		
@@ -84,10 +90,17 @@ void AFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 
 		AFW(Xi + n/2, Xj + n/2, Ui + n/2, Uj + n/2, Vi + n/2, Vj + n/2, n/2);
 		
-		#pragma omp parallel
+		#pragma omp parallel sections
 		{
-			AFW(Xi + n/2, Xj, Ui + n/2, Uj + n/2, Vi + n/2, Vj, n/2);
-			AFW(Xi, Xj + n/2, Ui, Uj + n/2, Vi + n/2, Vj + n/2, n/2);
+			#pragma omp section
+			{
+				AFW(Xi + n/2, Xj, Ui + n/2, Uj + n/2, Vi + n/2, Vj, n/2);
+			}
+			
+			#pragma omp section
+			{
+				AFW(Xi, Xj + n/2, Ui, Uj + n/2, Vi + n/2, Vj + n/2, n/2);
+			}
 		}
 		#pragma omp barrier
 
@@ -105,10 +118,10 @@ int main(int argc, char *argv[])
 	init(vertices);
 	/* vertices represent number of vertices and edges represent number of edges in the graph. */
 
-	#pragma omp parallel for
+	#pragma omp for nowait
 	for(int i = 0 ; i < vertices ; i++ )
 	{
-		#pragma omp parallel for       
+		#pragma omp for nowait      
 		for(int j = 0 ; j< vertices; j++ )       
 		{
 			if( i == j )
