@@ -1,12 +1,9 @@
-#include<stdio.h>
-#include<iostream>
-#include <cstdlib>
-
-#include<limits.h>
-#include<algorithm>
+#include <stdio.h>
+#include <iostream>
+#include <limits.h>
+#include <algorithm>
 #include <cilk.h>
 #include <cilkview.h>
-
 using namespace std;
 
 /* maxVertices represents maximum number of vertices that can be present in the graph. */
@@ -22,10 +19,11 @@ using namespace std;
 //int min(int a,int b){return (a<b)?a:b;}
 
 int dist[maxVertices][maxVertices];
+
 int vertices;
+
 void init(int n)
 {
-  
         cilk_for(int i=0;i<n;i++)
         {
                 cilk_for(int j=0;j<n;j++)
@@ -41,19 +39,19 @@ void init(int n)
                 }
         }
 }
-void FloydWarshall(int vertices)
-{
-        
-	for(int via=0;via<vertices;via++)
+
+void A_loop_FW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n)
+{       
+	for(int via = Uj; via < Uj + n; via++)
 	{
-	cilk_for(int from=0;from<vertices;from++)
+	cilk_for(int from = Xi; from < Xi + n; from++)
         {
-                cilk_for(int to=0;to<vertices;to++)
+                cilk_for(int to = Xj; to < Xj + n ; to++)
                 {
                         if(from!=to && from!=via && to!=via)
-						{
-							dist[from][to] = min(dist[from][to],dist[from][via]+dist[via][to]);
-						}
+			{
+				dist[from][to] = min(dist[from][to],dist[from][via]+dist[via][to]);
+			}
                         
                 }
         }
@@ -61,17 +59,40 @@ void FloydWarshall(int vertices)
 }
 
 
-int edges;
+void AFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
+	if (n == 16)
+		A_loop_FW(Xi, Xj, Ui, Uj, Vi, Vj, n);
 
+	else {
+		AFW(Xi, Xj, Ui, Uj, Vi, Vj, n/2);
+
+		cilk_spawn AFW(Xi, Xj + n/2, Ui, Uj, Vi, Vj + n/2, n/2);
+		AFW(Xi + n/2, Xj, Ui + n/2, Uj, Vi, Vj, n/2);
+		cilk_sync;
+		
+		AFW(Xi + n/2, Xj + n/2, Ui + n/2, Uj, Vi, Vj + n/2, n/2);
+		
+
+		AFW(Xi + n/2, Xj + n/2, Ui + n/2, Uj + n/2, Vi + n/2, Vj + n/2, n/2);
+		
+		cilk_spawn AFW(Xi + n/2, Xj, Ui + n/2, Uj + n/2, Vi + n/2, Vj, n/2);
+		AFW(Xi, Xj + n/2, Ui, Uj + n/2, Vi + n/2, Vj + n/2, n/2);
+		cilk_sync;
+
+		AFW(Xi, Xj, Ui, Uj + n/2, Vi + n/2, Vj, n/2);
+	}
+}
+
+int edges;
 
 int cilk_main(int argc, char *argv[])
 {
 	cilk::cilkview cv;
-	cv.start();
+        cv.start();
 	char *arg_vertices = getenv("N_VERTICES");
 	vertices = atoi(arg_vertices);
 	init(vertices);
-
+	
 	for(int i = 0 ; i < vertices ; i++ )
 	{
 		for(int j = 0 ; j< vertices; j++ )       
@@ -88,21 +109,17 @@ int cilk_main(int argc, char *argv[])
 				else
 					 dist[i][j] = num;
 			}
-	
-
 		}
 	}	
 
-
-	FloydWarshall(vertices);
-	cv.stop();
-        cv.dump("fw");
+	AFW(0, 0, 0, 0, 0, 0, vertices);
+        cv.stop();
+        cv.dump("fwr1");
 	for(int i = 0 ; i < vertices; i++ ) 
 	{
 		cout << "\n";
 		for(int j = 0 ; j< vertices ;j++ )
 			cout << dist[i][j] << " " ;
 	}
-
 	return 0;
 }
