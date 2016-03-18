@@ -24,10 +24,10 @@ int vertices;
 void init(int n)
 {
   
-        #pragma omp for nowait
+        #pragma omp for
         for(int i=0;i<n;i++)
         {
-                #pragma omp for nowait
+                #pragma omp for
         for(int j=0;j<n;j++)
                 {
                         if(i==j)
@@ -43,25 +43,32 @@ void init(int n)
 }
 
 void A_loop_FW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n)
-{       
-	for(int via = Uj; via < Uj + n; via++)
-	{
-	#pragma omp parallel for
-    for(int from = Xi; from < Xi + n; from++)
-    {
-        #pragma omp parallel for
-        for(int to = Xj; to < Xj + n ; to++)
-        {
-            if(from!=to && from!=via && to!=via)
-			{	
-				omp_set_lock(&dist_locks[from][to]);
-				dist[from][to] = min(dist[from][to],dist[from][via]+dist[via][to]);
-				omp_unset_lock(&dist_locks[from][to]);
-			}
-                        
-        }
-     }
-   }
+{   
+
+	#pragma omp parallel
+	{	
+		int nthreads = omp_get_num_threads();
+    	int id = omp_get_thread_num();
+
+		for(int via = Uj+id; via < Uj + n; via+=nthreads)
+		{
+		#pragma omp parallel for
+	    for(int from = Xi; from < Xi + n; from++)
+	    {
+	        #pragma omp parallel for
+	        for(int to = Xj; to < Xj + n ; to++)
+	        {
+	            if(from!=to && from!=via && to!=via)
+				{	
+					//omp_set_lock(&dist_locks[from][to]);
+					dist[from][to] = min(dist[from][to],dist[from][via]+dist[via][to]);
+					//omp_unset_lock(&dist_locks[from][to]);
+				}
+	                        
+	        }
+	     }
+	   }
+	}
 }
 
 
@@ -138,7 +145,7 @@ int main(int argc, char *argv[])
 			}
 		}
 	}	
-
+	#pragma omp barrier
 	AFW(0, 0, 0, 0, 0, 0, vertices);
 
 	for(int i = 0 ; i < vertices; i++ ) 

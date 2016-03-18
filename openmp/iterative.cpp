@@ -46,26 +46,30 @@ void init(int n)
 }
 void FloydWarshall(int vertices)
 {
-        
-	for(int via=0;via<vertices;via++)
-	{
-		
-		#pragma omp parallel for
-		for(int from=0;from<vertices;from++)
-        {
-                #pragma omp parallel for
-                for(int to=0;to<vertices;to++)
-                {
-                        if(from!=to && from!=via && to!=via)
-						{
-              omp_set_lock(&dist_locks[from][to]);
-							dist[from][to] = min(dist[from][to],dist[from][via]+dist[via][to]);
-              omp_unset_lock(&dist_locks[from][to]);
-						}
-                        
-                }
-        }
-   }
+  #pragma omp parallel
+  {  
+  	int nthreads = omp_get_num_threads();
+    int id = omp_get_thread_num();
+    for(int via=id;via<vertices;via+=nthreads)
+  	{
+  		
+  		#pragma omp parallel for
+  		for(int from=0;from<vertices;from++)
+          {
+                  #pragma omp parallel for
+                  for(int to=0;to<vertices;to++)
+                  {
+                          if(from!=to && from!=via && to!=via)
+  						{
+                //omp_set_lock(&dist_locks[from][to]);
+  							dist[from][to] = min(dist[from][to],dist[from][via]+dist[via][to]);
+                //omp_unset_lock(&dist_locks[from][to]);
+  						}
+                          
+                  }
+          }
+     }
+  }
 }
 
 
@@ -79,12 +83,12 @@ int main(int argc, char *argv[])
        init(vertices);
         /* vertices represent number of vertices and edges represent number of edges in the graph. */
 		
-omp_set_num_threads(NUM_THREADS);
+//omp_set_num_threads(NUM_THREADS);
 
-  #pragma omp parallel for
+  #pragma omp for
   for(int i = 0 ; i < vertices ; i++ )
   {
-    #pragma omp parallel for
+    #pragma omp for
     for(int j = 0 ; j< vertices; j++ )       
     {
       if( i == j )
