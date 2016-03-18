@@ -71,7 +71,7 @@ void BFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 		BFW(Xi + n/2, Xj + n/2, Ui + n/2, Uj, Vi, Vj + n/2, n/2);
 		cilk_sync;
 
-		cilk_spawn BFW(Xi + n/2, Xj + n/2, Ui + n/2, Uj + n/2, Vi + n/2, Vj, n/2);
+		cilk_spawn BFW(Xi + n/2, Xj, Ui + n/2, Uj + n/2, Vi + n/2, Vj, n/2);
 		BFW(Xi + n/2, Xj + n/2, Ui + n/2, Uj + n/2, Vi + n/2, Vj + n/2, n/2);
 		cilk_sync;
 
