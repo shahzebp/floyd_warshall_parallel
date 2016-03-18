@@ -12,7 +12,12 @@ export CILK_NWORKERS=32
 
 rm *.csv *.plt Test*
 
-M_VAL=$2 N_VERTICES=$1 cilkview fw > a_fw_output
-M_VAL=$2 N_VERTICES=$1 cilkview fwr1 > a_fwr1_output
-M_VAL=$2 N_VERTICES=$1 cilkview fwr2 > a_fwr2_output
-M_VAL=$2 N_VERTICES=$1 cilkview fwr3 > a_fwr3_output
+export N_VERTICES=$1
+
+for i in {2 4 8 16 32 64 128 256 512 1024}
+do 
+	M_VAL=$i cilkview fw > a_fw_output
+	M_VAL=$i cilkview fwr1 > a_fwr1_output
+	M_VAL=$i cilkview fwr2 > a_fwr2_output
+	M_VAL=$i cilkview fwr3 > a_fwr3_output
+done
