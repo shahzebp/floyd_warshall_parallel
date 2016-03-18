@@ -22,7 +22,10 @@ using namespace std;
 //int min(int a,int b){return (a<b)?a:b;}
 
 int dist[maxVertices][maxVertices];
+
 int vertices;
+int m_val;
+
 void init(int n)
 {
   
@@ -66,12 +69,13 @@ int edges;
 
 int cilk_main(int argc, char *argv[])
 {
-	cilk::cilkview cv;
-	cv.start();
-	char *arg_vertices = getenv("N_VERTICES");
-	vertices = atoi(arg_vertices);
-	init(vertices);
 
+	char *arg_vertices = getenv("N_VERTICES");
+	char *arg_m_val    = getenv("M_VAL");
+
+	vertices = atoi(arg_vertices);
+	m_val	 = atoi(arg_m_val);
+	
 	for(int i = 0 ; i < vertices ; i++ )
 	{
 		for(int j = 0 ; j< vertices; j++ )       
@@ -93,10 +97,14 @@ int cilk_main(int argc, char *argv[])
 		}
 	}	
 
-
+	cilk::cilkview cv;
+	cv.start();
+	
 	FloydWarshall(vertices);
+
 	cv.stop();
         cv.dump("fw");
+
 	for(int i = 0 ; i < vertices; i++ ) 
 	{
 		cout << "\n";

@@ -16,4 +16,4 @@ FWR3:
 	$(CC) $(CFLAGS) -o fwr3 FWRecursive3.cpp -I $(HOME)/cilk/include/cilktools/
 
 clean:
-	rm -rf fw*  core* Test* a_*
+	rm -rf fw*  core* Test* a_* cilkview*

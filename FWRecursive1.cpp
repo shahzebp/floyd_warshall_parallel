@@ -21,6 +21,7 @@ using namespace std;
 int dist[maxVertices][maxVertices];
 
 int vertices;
+int m_val;
 
 void init(int n)
 {
@@ -60,7 +61,7 @@ void A_loop_FW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n)
 
 
 void AFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
-	if (n == 16)
+	if (n == m_val)
 		A_loop_FW(Xi, Xj, Ui, Uj, Vi, Vj, n);
 
 	else {
@@ -88,9 +89,11 @@ int edges;
 int main(int argc, char *argv[])
 {      
 	char *arg_vertices = getenv("N_VERTICES");
+	char *arg_m_val    = getenv("M_VAL");
+
 	vertices = atoi(arg_vertices);
-        cilkview_data_t d;
-        __cilkview_query(d);	
+	m_val	 = atoi(arg_m_val);
+	
 	init(vertices);
 	
 	for(int i = 0 ; i < vertices ; i++ )
@@ -112,8 +115,13 @@ int main(int argc, char *argv[])
 		}
 	}	
 
+	cilkview_data_t d;
+        __cilkview_query(d);	
+
 	AFW(0, 0, 0, 0, 0, 0, vertices);
 	__cilkview_report(&d, NULL, "fwr1", CV_REPORT_WRITE_TO_RESULTS);
+	
+
 	for(int i = 0 ; i < vertices; i++ ) 
 	{
 		cout << "\n";
