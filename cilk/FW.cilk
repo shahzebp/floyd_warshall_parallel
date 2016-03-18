@@ -74,7 +74,7 @@ int cilk_main(int argc, char *argv[])
 	char *arg_vertices = getenv("N_VERTICES");
 	char *arg_m_val    = getenv("M_VAL");
 	
-	string plotFileName = "fw1" + string(arg_vertices) + string(arg_m_val); 
+	string plotFileName = "fw1_" + string(arg_vertices) + "_" + string(arg_m_val); 
 	vertices = atoi(arg_vertices);
 	m_val	 = atoi(arg_m_val);
 	
