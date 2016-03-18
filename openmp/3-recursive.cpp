@@ -134,7 +134,8 @@ void BFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 				BFW(Xi, Xj + n/2, Ui, Uj, Vi, Vj + n/2, n/2);
 			}
 		}
-		#pragma omp barrier;
+		#pragma omp barrier
+
 
 		#pragma omp parallel sections
 		{		
@@ -147,7 +148,8 @@ void BFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 					DFW(Xi + n/2, Xj + n/2, Ui + n/2, Uj, Vi, Vj + n/2, n/2);
 				}
 		}
-		#pragma omp barrier;
+		#pragma omp barrier
+
 
 		#pragma omp parallel sections
 		{
@@ -160,7 +162,8 @@ void BFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 					BFW(Xi + n/2, Xj + n/2, Ui + n/2, Uj + n/2, Vi + n/2, Vj + n/2, n/2);
 				}
 		}
-		#pragma omp barrier;
+		#pragma omp barrier
+
 
 		#pragma omp parallel sections
 		{	
@@ -173,7 +176,8 @@ void BFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 					DFW(Xi, Xj + n/2, Ui, Uj + n/2, Vi + n/2, Vj + n/2, n/2);
 				}
 		}
-		#pragma omp barrier;
+		#pragma omp barrier
+
 	}
 
 }
@@ -193,7 +197,8 @@ void CFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 				CFW(Xi + n/2, Xj, Ui + n/2, Uj, Vi, Vj, n/2);
 			}
 		}
-		#pragma omp barrier;
+		#pragma omp barrier
+
 
 		#pragma omp parallel sections
 		{
@@ -206,7 +211,8 @@ void CFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 				DFW(Xi + n/2, Xj + n/2, Ui + n/2, Uj, Vi, Vj + n/2, n/2);
 			}
 		}
-		#pragma omp barrier;
+		#pragma omp barrier
+
 
 		#pragma omp parallel sections
 		{
@@ -219,7 +225,8 @@ void CFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 				CFW(Xi + n/2, Xj + n/2, Ui + n/2, Uj + n/2, Vi + n/2, Vj + n/2, n/2);
 			}
 		}
-		#pragma omp barrier;
+		#pragma omp barrier
+
 
 		#pragma omp parallel sections
 		{
@@ -232,7 +239,8 @@ void CFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 				DFW(Xi + n/2, Xj, Ui + n/2, Uj + n/2, Vi, Vj + n/2, n/2);
 			}
 		}
-		#pragma omp barrier;
+		#pragma omp barrier
+
 	}
 
 }
@@ -255,7 +263,8 @@ void AFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 					CFW(Xi + n/2, Xj, Ui + n/2, Uj, Vi, Vj, n/2);
 				}
 		}
-		#pragma omp barrier;
+		#pragma omp barrier
+
 		
 		DFW(Xi + n/2, Xj + n/2, Ui + n/2, Uj, Vi, Vj + n/2, n/2);
 		
@@ -273,7 +282,8 @@ void AFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 					CFW(Xi, Xj + n/2, Ui, Uj + n/2, Vi + n/2, Vj + n/2, n/2);
 				}
 		}
-		#pragma omp barrier;
+		#pragma omp barrier
+
 
 		DFW(Xi, Xj, Ui, Uj + n/2, Vi + n/2, Vj, n/2);
 	}
@@ -283,8 +293,7 @@ int edges;
 
 int main(int argc, char *argv[])
 {      
- 	char *arg_vertices = getenv("N_VERTICES");
-	vertices = atoi(arg_vertices);
+	vertices = maxVertices;
 
 	init(vertices);
 
