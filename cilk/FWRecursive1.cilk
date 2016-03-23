@@ -45,9 +45,9 @@ void A_loop_FW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n)
 {       
 	for(int via = Uj; via < Uj + n; via++)
 	{
-	cilk_for(int from = Xi; from < Xi + n; from++)
+	for(int from = Xi; from < Xi + n; from++)
         {
-                cilk_for(int to = Xj; to < Xj + n ; to++)
+                for(int to = Xj; to < Xj + n ; to++)
                 {
                         if(from!=to && from!=via && to!=via)
 			{
@@ -61,7 +61,7 @@ void A_loop_FW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n)
 
 
 void AFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
-	if (n == m_val)
+	if (n <= m_val)
 		A_loop_FW(Xi, Xj, Ui, Uj, Vi, Vj, n);
 
 	else {

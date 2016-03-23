@@ -60,7 +60,7 @@ void F_loop_FW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n)
 }
 
 void DFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
-	if (n == m_val)
+	if (n <= m_val)
 		F_loop_FW(Xi, Xj, Ui, Uj, Vi, Vj, n);
 
 	else {
@@ -79,7 +79,7 @@ void DFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 }
 
 void BFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
-	if (n == m_val)
+	if (n <= m_val)
 		F_loop_FW(Xi, Xj, Ui, Uj, Vi, Vj, n);
 
 	else {
@@ -103,7 +103,7 @@ void BFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 }
 
 void CFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
-	if (n == m_val)
+	if (n <= m_val)
 		F_loop_FW(Xi, Xj, Ui, Uj, Vi, Vj, n);
 	else {
 		cilk_spawn CFW(Xi, Xj, Ui, Uj, Vi, Vj, n/2);
@@ -126,7 +126,7 @@ void CFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
 }
 
 void AFW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n) {
-	if (n == m_val)
+	if (n <= m_val)
 		F_loop_FW(Xi, Xj, Ui, Uj, Vi, Vj, n);
 
 	else {
