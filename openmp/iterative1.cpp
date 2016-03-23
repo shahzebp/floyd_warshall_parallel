@@ -7,7 +7,7 @@ using namespace std;
 
 /* maxVertices represents maximum number of vertices that can be present in the graph. */
 #ifndef maxVertices
-#define maxVertices   64
+#define maxVertices   8192
 #endif
 #define INF           INT_MAX-1
 
@@ -46,11 +46,8 @@ void init(int n)
 }
 void FloydWarshall(int vertices)
 {
-  #pragma omp parallel
-  {  
-  	int nthreads = omp_get_num_threads();
-    int id = omp_get_thread_num();
-    for(int via=id;via<vertices;via+=nthreads)
+
+    for(int via=0;via<vertices;via++)
   	{
   		
   		#pragma omp parallel for
@@ -61,15 +58,14 @@ void FloydWarshall(int vertices)
                   {
                           if(from!=to && from!=via && to!=via)
   						{
-                omp_set_lock(&dist_locks[from][to]);
+                //omp_set_lock(&dist_locks[from][to]);
   							dist[from][to] = min(dist[from][to],dist[from][via]+dist[via][to]);
-                omp_unset_lock(&dist_locks[from][to]);
+                //omp_unset_lock(&dist_locks[from][to]);
   						}
                           
                   }
           }
      }
-  }
 }
 
 

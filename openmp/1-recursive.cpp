@@ -60,9 +60,9 @@ void A_loop_FW(int Xi, int Xj, int Ui, int Uj, int Vi, int Vj, int n)
 	        {
 	            if(from!=to && from!=via && to!=via)
 				{	
-					//omp_set_lock(&dist_locks[from][to]);
+					omp_set_lock(&dist_locks[from][to]);
 					dist[from][to] = min(dist[from][to],dist[from][via]+dist[via][to]);
-					//omp_unset_lock(&dist_locks[from][to]);
+					omp_unset_lock(&dist_locks[from][to]);
 				}
 	                        
 	        }
@@ -119,8 +119,8 @@ int edges;
 
 int main(int argc, char *argv[])
 {      
-	//omp_set_num_threads(NUM_THREADS);
-	vertices = maxVertices;
+	char *arg_vertices = getenv("N_VERTICES");
+     vertices = atoi(arg_vertices);
 	/*initialize dist between all pairs as infinity*/
 	init(vertices);
 	/* vertices represent number of vertices and edges represent number of edges in the graph. */
@@ -146,7 +146,10 @@ int main(int argc, char *argv[])
 		}
 	}	
 	#pragma omp barrier
-	AFW(0, 0, 0, 0, 0, 0, vertices);
+	
+	double start = omp_get_wtime();
+		AFW(0, 0, 0, 0, 0, 0, vertices);
+    double end = omp_get_wtime();
 
 	for(int i = 0 ; i < vertices; i++ ) 
 	{
@@ -155,5 +158,6 @@ int main(int argc, char *argv[])
 			cout << dist[i][j] << " " ;
 	}
 
+	printf("\nTime elapsed: %.16f\n", end - start);
 	return 0;
 }

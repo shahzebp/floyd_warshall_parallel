@@ -5,9 +5,7 @@
 #SBATCH -p normal  # Queue (partition) name -- normal, development, etc.
 #SBATCH -t 01:30:00     # Run time (hh:mm:ss) - 1.5 hours
 
-export CILK_NWORKERS=32
 
-./fw > out
-./fw1 > out1
-./fw2 > out2
+export N_VERTICES=2048
 
+./a > out
