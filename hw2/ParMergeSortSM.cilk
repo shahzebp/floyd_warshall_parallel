@@ -19,22 +19,125 @@ using namespace std;
 //int min(int a,int b){return (a<b)?a:b;}
 
 typedef unsigned long long ULL;
-double dist[maxVertices + 1];
+double dist[maxVertices];
 
 ULL vertices;
 ULL m_val;
 
-void init(ULL n)
+void swap(ULL index1, ULL index2)
+{
+	double temp;
+	temp = dist[index1];
+	dist[index1] = dist[index2];
+	dist[index2] = temp;
+}
+void init()
 {
 	ULL i;
-	for(i=1;i<=n;i++)
+	for(i=0;i<vertices;i++)
 		dist[i] = i * 1.0;
 	ULL randomIndex1, randomIndex2;
-	randomIndex1 = rand() % n;
-	randomIndex2 = rand() % n;
-	std::cout << "Value is " << randomIndex1 << " " << randomIndex2 << endl;
+	for(i=0;i<vertices;i++)
+	{
+		randomIndex1 = rand() % vertices;
+		randomIndex2 = rand() % vertices;
+		swap(randomIndex1, randomIndex2);
+	}
 }
 
+void merge(ULL l, ULL m, ULL r)
+{
+    ULL i, j, k;
+    ULL n1 = m - l + 1;
+    ULL n2 =  r - m;
+ 
+    double L[n1], R[n2];
+ 
+    for (i = 0; i < n1; i++)
+        L[i] = dist[l + i];
+    for (j = 0; j < n2; j++)
+        R[j] = dist[m + 1+ j];
+ 
+    i = 0;
+    j = 0;
+    k = l;
+    while (i < n1 && j < n2)
+    {
+        if (L[i] <= R[j])
+        {
+            dist[k] = L[i];
+            i++;
+        }
+        else
+        {
+            dist[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+    while (i < n1)
+    {
+        dist[k] = L[i];
+        i++;
+        k++;
+    }
+    while (j < n2)
+    {
+        dist[k] = R[j];
+        j++;
+        k++;
+    }
+}
+
+bool verify_array()
+{
+	ULL i;
+	for(i=0;i<vertices-1;i++)
+	{
+		if(dist[i] < dist[i+1]) return false;
+	}
+	return true;	
+}
+
+void print_array()
+{
+	ULL i;
+	for(i=0;i<vertices;i++) cout << dist[i] << " ";
+}
+
+void insertionSort(ULL l, ULL r)
+{
+   ULL i, j;
+   double key;
+   for (i = l + 1; i < r; i++)
+   {
+       key = dist[i];
+       j = i-1;
+ 
+       while (j >= l && dist[j] > key)
+       {
+           dist[j+1] = dist[j];
+           j = j-1;
+       }
+       dist[j+1] = key;
+   }
+}
+
+void ParMergeSortPM(ULL p, ULL r)
+{
+	ULL n = r - p + 1;
+	if(n <= m_val)
+		insertionSort(p,r);
+	else
+	{
+		ULL q = (p + r)/2;
+		cilk_spawn ParMergeSortPM(p, q);
+		ParMergeSortPM(q+1, r);
+		cilk_sync;
+		merge(p, q, r);
+	}
+}
+		
 int cilk_main(int argc, char *argv[])
 {
 	char *arg_vertices = getenv("N_VERTICES");
@@ -46,17 +149,16 @@ int cilk_main(int argc, char *argv[])
 	m_val	 = atoi(arg_m_val);
 	
 	vertices = atoi(arg_vertices);
-	init(vertices);
-	
-	cilk::cilkview cv;
-        cv.start();
-
+	init();
+	print_array();
+	//cilk::cilkview cv;
+        //cv.start();
 	//AFW(0, 0, 0, 0, 0, 0, vertices);
 
-        cv.stop();
-        cv.dump(plotFileName.c_str(), false);
+        //cv.stop();
+        //cv.dump(plotFileName.c_str(), false);
 
-        std::cout << cv.accumulated_milliseconds()  << " millseconds" << std::endl;
+        //std::cout << cv.accumulated_milliseconds()  << " millseconds" << std::endl;
 	
 	return 0;
 }
