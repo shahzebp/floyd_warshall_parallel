@@ -101,6 +101,7 @@ bool verify_array()
 
 void print_array()
 {
+	cout << "Vertices in print_array " << vertices << endl;
 	ULL i;
 	for(i=0;i<vertices;i++) cout << dist[i] << " ";
 }
@@ -127,7 +128,7 @@ void ParMergeSortPM(ULL p, ULL r)
 {
 	ULL n = r - p + 1;
 	if(n <= m_val)
-		insertionSort(p,r);
+		insertionSort(p, n);
 	else
 	{
 		ULL q = (p + r)/2;
@@ -150,9 +151,12 @@ int cilk_main(int argc, char *argv[])
 	
 	vertices = atoi(arg_vertices);
 	init();
-	print_array();
 	//cilk::cilkview cv;
         //cv.start();
+	cout << "Vertices in " << vertices << endl;
+	print_array();
+	ParMergeSortPM(0, vertices-1);
+	print_array();
 	//AFW(0, 0, 0, 0, 0, 0, vertices);
 
         //cv.stop();
