@@ -1,0 +1,62 @@
+#include <stdio.h>
+#include <iostream>
+#include <limits.h>
+#include <algorithm>
+#include <cilk.h>
+#include <cilkview.h>
+using namespace std;
+
+/* maxVertices represents maximum number of vertices that can be present in the graph. */
+#ifndef maxVertices
+#define maxVertices   8192
+#endif
+#define INF           INT_MAX-1
+
+
+/* Input Format: Graph is directed and weighted. First two integers must be number of vertices and edges 
+   which must be followed by pairs of vertices which has an edge between them. 
+ */
+//int min(int a,int b){return (a<b)?a:b;}
+
+typedef unsigned long long ULL;
+double dist[maxVertices + 1];
+
+ULL vertices;
+ULL m_val;
+
+void init(ULL n)
+{
+	ULL i;
+	for(i=1;i<=n;i++)
+		dist[i] = i * 1.0;
+	ULL randomIndex1, randomIndex2;
+	randomIndex1 = rand() % n;
+	randomIndex2 = rand() % n;
+	std::cout << "Value is " << randomIndex1 << " " << randomIndex2 << endl;
+}
+
+int cilk_main(int argc, char *argv[])
+{
+	char *arg_vertices = getenv("N_VERTICES");
+	char *arg_m_val    = getenv("M_VAL");
+
+	string plotFileName = "fwr1_" + string(arg_vertices) + "_" + string(arg_m_val);
+
+	vertices = atoi(arg_vertices);
+	m_val	 = atoi(arg_m_val);
+	
+	vertices = atoi(arg_vertices);
+	init(vertices);
+	
+	cilk::cilkview cv;
+        cv.start();
+
+	//AFW(0, 0, 0, 0, 0, 0, vertices);
+
+        cv.stop();
+        cv.dump(plotFileName.c_str(), false);
+
+        std::cout << cv.accumulated_milliseconds()  << " millseconds" << std::endl;
+	
+	return 0;
+}
