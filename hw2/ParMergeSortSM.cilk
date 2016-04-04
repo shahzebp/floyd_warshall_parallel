@@ -12,19 +12,12 @@ using namespace std;
 #endif
 #define INF           INT_MAX-1
 
-
-/* Input Format: Graph is directed and weighted. First two integers must be number of vertices and edges 
-   which must be followed by pairs of vertices which has an edge between them. 
- */
-//int min(int a,int b){return (a<b)?a:b;}
-
-typedef unsigned long long ULL;
 double dist[maxVertices];
 
-ULL vertices;
-ULL m_val;
+unsigned long long vertices;
+unsigned long long m_val;
 
-void swap(ULL index1, ULL index2)
+void swap(unsigned long long index1, unsigned long long index2)
 {
 	double temp;
 	temp = dist[index1];
@@ -33,10 +26,10 @@ void swap(ULL index1, ULL index2)
 }
 void init()
 {
-	ULL i;
+	unsigned long long i;
 	for(i=0;i<vertices;i++)
 		dist[i] = i * 1.0;
-	ULL randomIndex1, randomIndex2;
+	unsigned long long randomIndex1, randomIndex2;
 	for(i=0;i<vertices;i++)
 	{
 		randomIndex1 = rand() % vertices;
@@ -45,11 +38,11 @@ void init()
 	}
 }
 
-void merge(ULL l, ULL m, ULL r)
+void merge(unsigned long long l, unsigned long long m, unsigned long long r)
 {
-    ULL i, j, k;
-    ULL n1 = m - l + 1;
-    ULL n2 =  r - m;
+    unsigned long long i, j, k;
+    unsigned long long n1 = m - l + 1;
+    unsigned long long n2 =  r - m;
  
     double L[n1], R[n2];
  
@@ -91,7 +84,7 @@ void merge(ULL l, ULL m, ULL r)
 
 bool verify_array()
 {
-	ULL i;
+	unsigned long long i;
 	for(i=0;i<vertices-1;i++)
 	{
 		if(dist[i] < dist[i+1]) return false;
@@ -102,13 +95,13 @@ bool verify_array()
 void print_array()
 {
 	cout << "Vertices in print_array " << vertices << endl;
-	ULL i;
+	unsigned long long i;
 	for(i=0;i<vertices;i++) cout << dist[i] << " ";
 }
 
-void insertionSort(ULL l, ULL r)
+void insertionSort(unsigned long long l, unsigned long long r)
 {
-   ULL i, j;
+   unsigned long long i, j;
    double key;
    for (i = l + 1; i < r; i++)
    {
@@ -124,14 +117,14 @@ void insertionSort(ULL l, ULL r)
    }
 }
 
-void ParMergeSortPM(ULL p, ULL r)
+void ParMergeSortPM(unsigned long long p, unsigned long long r)
 {
-	ULL n = r - p + 1;
+	unsigned long long n = r - p + 1;
 	if(n <= m_val)
-		insertionSort(p, n);
+		insertionSort(p, p + n);
 	else
 	{
-		ULL q = (p + r)/2;
+		unsigned long long q = (p + r)/2;
 		cilk_spawn ParMergeSortPM(p, q);
 		ParMergeSortPM(q+1, r);
 		cilk_sync;
@@ -149,7 +142,6 @@ int cilk_main(int argc, char *argv[])
 	vertices = atoi(arg_vertices);
 	m_val	 = atoi(arg_m_val);
 	
-	vertices = atoi(arg_vertices);
 	init();
 	//cilk::cilkview cv;
         //cv.start();
