@@ -12,7 +12,7 @@ using namespace std;
 #endif
 #define INF           INT_MAX-1
 
-double dist[maxVertices];
+double *dist;
 
 unsigned long long vertices;
 unsigned long long m_val;
@@ -43,8 +43,11 @@ void merge(unsigned long long l, unsigned long long m, unsigned long long r)
     unsigned long long i, j, k;
     unsigned long long n1 = m - l + 1;
     unsigned long long n2 =  r - m;
- 
-    double L[n1], R[n2];
+
+    double *L = NULL, *R = NULL;
+
+    L = new double[n1];
+    R = new double[n2];
  
     for (i = 0; i < n1; i++)
         L[i] = dist[l + i];
@@ -80,6 +83,8 @@ void merge(unsigned long long l, unsigned long long m, unsigned long long r)
         j++;
         k++;
     }
+    delete [] L;
+    delete [] R;
 }
 
 bool verify_array()
@@ -87,7 +92,7 @@ bool verify_array()
 	unsigned long long i;
 	for(i=0;i<vertices-1;i++)
 	{
-		if(dist[i] < dist[i+1]) return false;
+		if(dist[i] > dist[i+1]) return false;
 	}
 	return true;	
 }
@@ -103,7 +108,7 @@ void insertionSort(unsigned long long l, unsigned long long r)
 {
    unsigned long long i, j;
    double key;
-   for (i = l + 1; i < r; i++)
+   for (i = l + 1; i <= r; i++)
    {
        key = dist[i];
        j = i-1;
@@ -121,7 +126,7 @@ void ParMergeSortPM(unsigned long long p, unsigned long long r)
 {
 	unsigned long long n = r - p + 1;
 	if(n <= m_val)
-		insertionSort(p, p + n);
+		insertionSort(p, r);
 	else
 	{
 		unsigned long long q = (p + r)/2;
@@ -142,19 +147,20 @@ int cilk_main(int argc, char *argv[])
 	vertices = atoi(arg_vertices);
 	m_val	 = atoi(arg_m_val);
 	
+	dist = new double[vertices];	
 	init();
-	//cilk::cilkview cv;
-        //cv.start();
-	cout << "Vertices in " << vertices << endl;
-	print_array();
+	cilk::cilkview cv;
+        cv.start();
 	ParMergeSortPM(0, vertices-1);
-	print_array();
-	//AFW(0, 0, 0, 0, 0, 0, vertices);
+        cv.stop();
+	if(verify_array() == true)
+	{
+		cv.dump(plotFileName.c_str(), false);
+        	std::cout << cv.accumulated_milliseconds()  << " millseconds" << std::endl;
+	}
+	else
+		std::cout << "Sort Failed";
 
-        //cv.stop();
-        //cv.dump(plotFileName.c_str(), false);
-
-        //std::cout << cv.accumulated_milliseconds()  << " millseconds" << std::endl;
-	
+	delete [] dist;	
 	return 0;
 }
