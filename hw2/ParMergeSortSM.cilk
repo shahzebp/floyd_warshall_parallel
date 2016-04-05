@@ -122,7 +122,7 @@ void insertionSort(unsigned long long l, unsigned long long r)
    }
 }
 
-void ParMergeSortPM(unsigned long long p, unsigned long long r)
+void ParMergeSortSM(unsigned long long p, unsigned long long r)
 {
 	unsigned long long n = r - p + 1;
 	if(n <= m_val)
@@ -130,8 +130,8 @@ void ParMergeSortPM(unsigned long long p, unsigned long long r)
 	else
 	{
 		unsigned long long q = (p + r)/2;
-		cilk_spawn ParMergeSortPM(p, q);
-		ParMergeSortPM(q+1, r);
+		cilk_spawn ParMergeSortSM(p, q);
+		ParMergeSortSM(q+1, r);
 		cilk_sync;
 		merge(p, q, r);
 	}
@@ -151,7 +151,7 @@ int cilk_main(int argc, char *argv[])
 	init();
 	cilk::cilkview cv;
         cv.start();
-	ParMergeSortPM(0, vertices-1);
+	ParMergeSortSM(0, vertices-1);
         cv.stop();
 	if(verify_array() == true)
 	{
