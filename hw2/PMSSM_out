@@ -1,0 +1,15 @@
+2 57 millseconds
+4 49 millseconds
+8 31 millseconds
+16 40 millseconds
+32 41 millseconds
+64 42 millseconds
+128 33 millseconds
+256 31 millseconds
+512 52 millseconds
+1024 48 millseconds
+2048 66 millseconds
+4096 108 millseconds
+8192 211 millseconds
+16384 383 millseconds
+32768 1058 millseconds
