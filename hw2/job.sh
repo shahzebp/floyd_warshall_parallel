@@ -5,9 +5,13 @@
 #SBATCH -p development  # Queue (partition) name -- normal, development, etc.
 #SBATCH -t 1:30:00     # Run time (hh:mm:ss) - 1.5 hours
 
-#export CILK_NWORKERS=32
+export CILK_NWORKERS=16
 
 rm *.csv *.plt Test*
 
-export N_VERTICES=$1
-M_VAL=64 PMSSM > PMSSM_out
+for (( c = 2; c <= 32768; c = c*2))
+do
+	export N_VERTICES=$1
+	echo -n $c" " >> PMSSM_out
+	M_VAL=$c ./PMSSM >> PMSSM_out
+done
