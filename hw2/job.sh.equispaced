@@ -1,0 +1,23 @@
+#!/bin/bash
+#SBATCH -J Test        # Job Name
+#SBATCH -o Test.o%j    # Output and error file name (%j expands to jobID)
+#SBATCH -n 16           # Total number of  tasks requested
+#SBATCH -p development  # Queue (partition) name -- normal, development, etc.
+#SBATCH -t 1:30:00     # Run time (hh:mm:ss) - 1.5 hours
+
+export CILK_NWORKERS=16
+
+m=`echo "2^30" | bc`
+sep=`echo "$m/11" | bc`
+export N_VERTICES=1000
+echo -n "N_VERTICES = 1000 M_VAL = 256 " >> PMSSM_out
+M_VAL=256 ./PMSSM >> PMSSM_out
+for (( c = 1000 + $sep ; c <= 1073740824; c = c + $sep))
+do
+	export N_VERTICES=$c
+	echo -n "N_VERTICES = " $c "M_VAL = 256 " >> PMSSM_out
+	M_VAL=256 ./PMSSM >> PMSSM_out
+done
+export N_VERTICES=1073740824
+echo -n "N_VERTICES = 2^30 M_VAL = 256 " >> PMSSM_out
+M_VAL=256 ./PMSSM >> PMSSM_out
