@@ -1,0 +1,232 @@
+#include <stdio.h>
+#include <iostream>
+#include <limits.h>
+#include <algorithm>
+#include <cilk.h>
+#include <cilkview.h>
+using namespace std;
+
+/* maxVertices represents maximum number of vertices that can be present in the graph. */
+#ifndef maxVertices
+#define maxVertices   8192
+#endif
+#define INF           INT_MAX-1
+
+double *dist;
+double *temp;
+
+unsigned long long vertices;
+unsigned long long m_val;
+
+void swap(unsigned long long index1, unsigned long long index2)
+{
+	double temp;
+	temp = dist[index1];
+	dist[index1] = dist[index2];
+	dist[index2] = temp;
+}
+void init()
+{
+	unsigned long long i;
+	for(i=0;i<vertices;i++)
+		dist[i] = i * 1.0;
+	unsigned long long randomIndex1, randomIndex2;
+	for(i=0;i<vertices;i++)
+	{
+		randomIndex1 = rand() % vertices;
+		randomIndex2 = rand() % vertices;
+		swap(randomIndex1, randomIndex2);
+	}
+}
+
+void merge(unsigned long long p1, unsigned long long r1, unsigned long long p2, unsigned long long r2, unsigned long long p3)
+{
+    unsigned long long i, j, k;
+    unsigned long long n1 = r1 - p1 + 1;
+    unsigned long long n2 = r2 - p2 + 1;
+
+    double *L = NULL, *R = NULL;
+
+    L = new double[n1];
+    R = new double[n2];
+ 
+    for (i = 0; i < n1; i++)
+        L[i] = temp[p1 + i];
+    for (j = 0; j < n2; j++)
+        R[j] = temp[p2 + j];
+ 
+    i = 0;
+    j = 0;
+    k = p3;
+    while (i < n1 && j < n2)
+    {
+        if (L[i] <= R[j])
+        {
+            dist[k] = L[i];
+            i++;
+        }
+        else
+        {
+            dist[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+    while (i < n1)
+    {
+        dist[k] = L[i];
+        i++;
+        k++;
+    }
+    while (j < n2)
+    {
+        dist[k] = R[j];
+        j++;
+        k++;
+    }
+    delete [] L;
+    delete [] R;
+}
+
+bool verify_array()
+{
+	unsigned long long i;
+	for(i=0;i<vertices-1;i++)
+	{
+		if(dist[i] > dist[i+1]) return false;
+	}
+	return true;	
+}
+
+void print_array()
+{
+	cout << "Vertices in print_array " << vertices << endl;
+	unsigned long long i;
+	for(i=0;i<vertices;i++) cout << dist[i] << " ";
+	cout << "\n";
+}
+
+void insertionSort(unsigned long long l, unsigned long long r)
+{
+   unsigned long long i, j;
+   double key;
+   for (i = l + 1; i <= r; i++)
+   {
+       key = dist[i];
+       j = i-1;
+ 
+       while (j >= l && dist[j] > key)
+       {
+           dist[j+1] = dist[j];
+           j = j-1;
+       }
+       dist[j+1] = key;
+   }
+}
+
+bool BinarySearch(unsigned long long key, unsigned long long p2, unsigned long long r2)
+{
+	unsigned long long m;
+	unsigned long long l = p2;
+	unsigned long long r = max(l, r2 + 1);
+	while( r > l)
+	{
+		m = l + (r-l)/2;
+
+                if( temp[m] <= key && temp[m+1] > key)
+                        return m+1;
+
+                if (temp[m] > key)
+                        r = m;
+                else
+                        l = m+1;
+        }
+        return r;
+}
+void ParMerge(unsigned long long p1, unsigned long long r1, unsigned long long p2, unsigned long long r2, unsigned long long p3)
+{
+	unsigned long long n1 = r1 - p1 + 1;
+	unsigned long long n2 = r2 - p2 + 1;
+	unsigned long long r3 = p3 + n1 + n2 - 1;
+	if(n1 + n2 <= m_val)
+	{
+		merge(p1, r1, p2, r2, p3);
+	}
+	else
+	{
+		if ( n1 < n2)
+		{
+			unsigned long long a;
+			// Swap p1 and p2
+			a = p1;
+			p1 = p2;
+			p2  = a;
+
+			// Swap r1 and r2
+			a = r1;
+			r1 = r2;
+			r2 = a;
+
+			// Swap n1 and n2
+			a = n1;
+			n1 = n2;
+			n2 = a;
+		}
+		unsigned long long q1 = (p1 + r1)/2;
+		unsigned long long q2 = BinarySearch(temp[q1], p2, r2);
+		unsigned long long q3 = p3 + (q1 - p1) + (q2 - p2);
+		dist[q3] = temp[q1];
+		cilk_spawn ParMerge(p1, q1 - 1, p2, q2 - 1, p3);
+		ParMerge(q1 + 1, r1, q2, r2, q3 + 1);
+		cilk_sync;
+	}
+}
+void ParMergeSortPM(unsigned long long p, unsigned long long r)
+{
+	unsigned long long n = r - p + 1;
+	unsigned long long i;
+	if(n <= 2)
+		insertionSort(p, r);
+	else
+	{
+		unsigned long long q = (p + r)/2;
+		cilk_spawn ParMergeSortPM(p, q);
+		ParMergeSortPM(q+1, r);
+		cilk_sync;
+		for(i=p;i<=r;i++)
+			temp[i] = dist[i];
+		ParMerge(p, q, q+1, r, p);
+	}
+}
+		
+int cilk_main(int argc, char *argv[])
+{
+	char *arg_vertices = getenv("N_VERTICES");
+	char *arg_m_val    = getenv("M_VAL");
+
+	string plotFileName = "fwr1_" + string(arg_vertices) + "_" + string(arg_m_val);
+
+	vertices = atoi(arg_vertices);
+	m_val	 = atoi(arg_m_val);
+	
+	dist = new double[vertices];
+	temp = new double[vertices];
+	init();
+	print_array();
+	cilk::cilkview cv;
+        cv.start();
+	//ParMergeSortPM(0, vertices-1);
+	cout << "Here iam " << endl;
+	print_array();
+        cv.stop();
+	if(verify_array() == true)
+	{
+		cv.dump(plotFileName.c_str(), false);
+        	std::cout << cv.accumulated_milliseconds()  << " millseconds" << std::endl;
+	}
+	else
+		std::cout << "Sort Failed";
+
+	delete [] dist;	
+	return 0;
+}
