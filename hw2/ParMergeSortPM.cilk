@@ -205,11 +205,9 @@ int cilk_main(int argc, char *argv[])
     dist = new double[vertices];
     temp = new double[vertices];
     init();
-    print_array();
     cilk::cilkview cv;
     cv.start();
     ParMergeSortPM(0, vertices-1);
-    print_array();
     cv.stop();
     if(verify_array() == true)
     {
