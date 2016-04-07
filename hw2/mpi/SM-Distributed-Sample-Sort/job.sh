@@ -10,6 +10,6 @@
 
 export LD_LIBRARY_PATH=$HOME/cilk/lib64/:$PWD:$LD_LIBRARY_PATH
 
-export N_VERTICES=1000
+export N_VERTICES=25000
 
 ibrun tacc_affinity a.out

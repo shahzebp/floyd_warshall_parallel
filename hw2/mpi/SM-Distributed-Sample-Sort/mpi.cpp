@@ -11,8 +11,7 @@ using namespace std;
 
 extern "C++" int ParMergeSortSM_CPP(double *dist, unsigned long long p,
                         unsigned long long r);
-
-double dist[8192];
+double *dist;
 
 unsigned long long vertices;
 unsigned long long m_val;
@@ -54,28 +53,21 @@ int main(int argc, char **argv) {
 	
         vertices = atoi(arg_vertices);
 
+	dist = new double[vertices];
 	int size, rank;
 
         int p = 5; 
+	int q = 5;
 
         int keys_per_node = vertices/p; 
 
-        int x = 1, q = x;
-
         double *es_keys = NULL;
-
         double *sub_es_keys = NULL;
-
         double *g_pivots = NULL;
-
-	q = 5;
-
 	double *local_arr;
-	
+
 	MPI_Init(&argc, &argv);
-
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
-
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
 	local_arr = (double *)malloc(sizeof(double) * keys_per_node); 
@@ -83,7 +75,7 @@ int main(int argc, char **argv) {
 	if (rank == 0) 
 		init();
 
-    	MPI_Scatter(&dist, keys_per_node, MPI_DOUBLE, local_arr,
+    	MPI_Scatter(dist, keys_per_node, MPI_DOUBLE, local_arr,
 		keys_per_node, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	ParMergeSortSM_CPP(local_arr, 0, keys_per_node - 1);
@@ -120,6 +112,7 @@ int main(int argc, char **argv) {
 
 	MPI_Bcast(g_pivots, size - 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
+/*
 	vector <vector <double> > ans; 
 
         vector <double> temp;
@@ -214,8 +207,10 @@ int main(int argc, char **argv) {
 	if (rank == 0) {
 		if (false == verify_array(alldata, vertices))
 			cout << "Alert: Not Sorted " << endl;
+		else
+			cout << " Sort Successfull " << endl << endl;
 	}
-
+*/
 	MPI_Finalize();
 
 	return 0;

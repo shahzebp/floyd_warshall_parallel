@@ -9,9 +9,5 @@ export CILK_NWORKERS=16
 
 rm *.csv *.plt Test*
 
-for (( c = 2; c <= 32768; c = c*2))
-do
-	export N_VERTICES=$1
-	echo -n $c" " >> PMSSM_out
-	M_VAL=$c ./PMSSM >> PMSSM_out
-done
+export N_VERTICES=$1
+M_VAL=256 cilkview PMSSM >> PMSSM_out
