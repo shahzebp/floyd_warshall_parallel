@@ -12,7 +12,9 @@ void merge(double *dist, unsigned long long l, unsigned long long m, unsigned lo
     unsigned long long n1 = m - l + 1;
     unsigned long long n2 =  r - m;
 
-    double L[n1], R[n2];
+    double *L, *R;
+    L = new double[n1];
+    R = new double[n2];
 
     for (i = 0; i < n1; i++)
         L[i] = dist[l + i];
@@ -48,6 +50,8 @@ void merge(double *dist, unsigned long long l, unsigned long long m, unsigned lo
         j++;
         k++;
     }
+    delete [] L;
+    delete [] R;
 }
 
 void insertionSort(double *dist, unsigned long long l, unsigned long long r)
