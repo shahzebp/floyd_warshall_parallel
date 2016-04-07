@@ -142,7 +142,7 @@ void ParMerge(unsigned long long p1, unsigned long long r1, unsigned long long p
 {
     unsigned long long n1 = r1 - p1 + 1;
     unsigned long long n2 = r2 - p2 + 1;
-    if(n1 + n2 <= m_val)
+    if(n1 + n2 <= 2048)
     {
         merge(p1, r1, p2, r2, p3);
     }
@@ -179,7 +179,7 @@ void ParMergeSortPM(unsigned long long p, unsigned long long r)
 {
     unsigned long long n = r - p + 1;
     unsigned long long i;
-    if(n <= 2)
+    if(n <= 128)
         insertionSort(p, r);
     else
     {
@@ -198,9 +198,9 @@ int cilk_main(int argc, char *argv[])
     char *arg_vertices = getenv("N_VERTICES");
     char *arg_m_val    = getenv("M_VAL");
     string plotFileName = "fwr1_" + string(arg_vertices) + "_" + string(arg_m_val);
-
-    vertices = 1024;
-    m_val     = 8;
+    
+    vertices = atoi(arg_vertices);
+    m_val    = atoi(arg_m_val); 
     
     dist = new double[vertices];
     temp = new double[vertices];
