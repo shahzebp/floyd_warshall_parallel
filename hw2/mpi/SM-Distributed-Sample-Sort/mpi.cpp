@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 
 	MPI_Bcast(g_pivots, size - 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-/*
+
 	vector <vector <double> > ans; 
 
         vector <double> temp;
@@ -144,8 +144,9 @@ int main(int argc, char **argv) {
         vector <vector <double> > ::iterator it;
         vector <double> ::iterator iter;
 
-	double collate[keys_per_node][keys_per_node];
-	memset(collate, -1, sizeof collate);
+	double **collate = new double*[size];
+	for(int i = 0;i<size; i++)
+		collate[i] = new double[keys_per_node];
 
 	for (int i = 0; i < size; i++) {
 		if (rank != i) {
@@ -179,7 +180,10 @@ int main(int argc, char **argv) {
 				sorted.push_back(collate[i][j]);
 		}
 	}	
-
+	for(int i = 0; i < keys_per_node; ++i) {
+    		delete [] collate[i];
+	}
+	delete [] collate;
 	sort(sorted.begin(), sorted.end());
 
 	set<double> uniq(sorted.begin(), sorted.end());
@@ -210,7 +214,7 @@ int main(int argc, char **argv) {
 		else
 			cout << " Sort Successfull " << endl << endl;
 	}
-*/
+
 	MPI_Finalize();
 
 	return 0;
