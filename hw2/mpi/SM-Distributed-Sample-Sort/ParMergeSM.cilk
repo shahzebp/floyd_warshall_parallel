@@ -1,0 +1,90 @@
+#include <cilk.h>
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+#define m_val 225
+
+void merge(double *dist, unsigned long long l, unsigned long long m, unsigned long long r)
+{
+    unsigned long long i, j, k; 
+    unsigned long long n1 = m - l + 1;
+    unsigned long long n2 =  r - m;
+
+    double L[n1], R[n2];
+
+    for (i = 0; i < n1; i++)
+        L[i] = dist[l + i];
+    for (j = 0; j < n2; j++)
+        R[j] = dist[m + 1+ j];
+
+    i = 0;
+    j = 0;
+    k = l;
+    while (i < n1 && j < n2)
+    {
+        if (L[i] <= R[j])
+        {
+            dist[k] = L[i];
+            i++;
+        }
+        else
+        {
+            dist[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+    while (i < n1)
+    {
+        dist[k] = L[i];
+        i++;
+        k++;
+    }
+    while (j < n2)
+    {
+        dist[k] = R[j];
+        j++;
+        k++;
+    }
+}
+
+void insertionSort(double *dist, unsigned long long l, unsigned long long r)
+{
+   unsigned long long i, j;
+   double key;
+   for (i = l + 1; i < r; i++)
+   {
+       key = dist[i];
+       j = i-1;
+
+       while (j >= l && dist[j] > key)
+       {
+           dist[j+1] = dist[j];
+           j = j-1;
+       }
+
+       dist[j+1] = key;
+   }
+}
+
+void ParMergeSortSM(double *dist, unsigned long long p, unsigned long long r)
+{
+        unsigned long long n = r - p + 1;
+        
+	if(n <= m_val)
+                insertionSort(dist, p, p + n);
+        else
+        {
+                unsigned long long q = (p + r)/2;
+                ParMergeSortSM(dist, p, q);
+                ParMergeSortSM(dist, q+1, r);
+                merge(dist, p, q, r);
+        }
+}
+extern "C++" int ParMergeSortSM_CPP(double *dist, unsigned long long p, unsigned long long r)
+{
+	return cilk::run(ParMergeSortSM, dist, p, r);
+}
+

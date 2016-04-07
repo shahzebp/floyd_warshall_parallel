@@ -1,0 +1,18 @@
+TACC: Starting up job 6855465
+TACC: Setting up parallel environment for MVAPICH2+mpispawn.
+TACC: Starting parallel tasks...
+Agent pid 77833
+Enter passphrase for /home1/04024/tg833237/.ssh/id_rsa_github.pub: Identity added: /home1/04024/tg833237/.ssh/id_rsa_github (/home1/04024/tg833237/.ssh/id_rsa_github)
+Agent pid 57007
+Enter passphrase for /home1/04024/tg833237/.ssh/id_rsa_github.pub: Agent pid 75125
+Identity added: /home1/04024/tg833237/.ssh/id_rsa_github (/home1/04024/tg833237/.ssh/id_rsa_github)
+Enter passphrase for /home1/04024/tg833237/.ssh/id_rsa_github.pub: Identity added: /home1/04024/tg833237/.ssh/id_rsa_github (/home1/04024/tg833237/.ssh/id_rsa_github)
+Agent pid 75852
+Agent pid 30488
+Enter passphrase for /home1/04024/tg833237/.ssh/id_rsa_github.pub: Identity added: /home1/04024/tg833237/.ssh/id_rsa_github (/home1/04024/tg833237/.ssh/id_rsa_github)
+Enter passphrase for /home1/04024/tg833237/.ssh/id_rsa_github.pub: Identity added: /home1/04024/tg833237/.ssh/id_rsa_github (/home1/04024/tg833237/.ssh/id_rsa_github)
+[c557-503.stampede.tacc.utexas.edu:mpirun_rsh][error_sighandler] Caught error: Segmentation fault (signal 11)
+/usr/local/bin/ibrun: line 697: 77768 Segmentation fault      $MPICH_HOME/bin/mpirun_rsh -np $MY_NSLOTS -hostfile $hostfile_tacc $MY_MPIRUN_OPTIONS $TACC_ENV $MVAPICH_LD_PRELOAD $fullcmd "$@"
+TACC: MPI job exited with code: 139
+ 
+TACC: Shutdown complete. Exiting.
