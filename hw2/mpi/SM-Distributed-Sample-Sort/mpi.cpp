@@ -160,6 +160,10 @@ int main (int argc, char *argv[])
 	
 	ParMergeSortSM_CPP(&per_proc_bucket[1], 0, elem_to_sort - 1);
 
+	delete[] arr;
+	delete[] per_proc_arr;
+	delete[] bucket_arr;
+		
 	if(rank == master) {
 		sorted_arr = new double[2 * elem_size];
 		final_arr = new double[elem_size];
