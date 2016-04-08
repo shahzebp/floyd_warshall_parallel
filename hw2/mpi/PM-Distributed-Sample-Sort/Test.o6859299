@@ -1,0 +1,9 @@
+TACC: Starting up job 6859299
+TACC: Setting up parallel environment for MVAPICH2+mpispawn.
+TACC: Starting parallel tasks...
+Sort Successfull 
+[c418-402.stampede.tacc.utexas.edu:mpirun_rsh][error_sighandler] Caught error: Segmentation fault (signal 11)
+/usr/local/bin/ibrun: line 697: 79831 Segmentation fault      $MPICH_HOME/bin/mpirun_rsh -np $MY_NSLOTS -hostfile $hostfile_tacc $MY_MPIRUN_OPTIONS $TACC_ENV $MVAPICH_LD_PRELOAD $fullcmd "$@"
+TACC: MPI job exited with code: 139
+ 
+TACC: Shutdown complete. Exiting.
