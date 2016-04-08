@@ -1,29 +1,27 @@
-#include <mpi.h>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
-#include <iostream>
-#include <algorithm>
-#include <vector>
-#include <string>
-#include <cstring>
-#include <set>
+#include <string.h>
+
+#include "mpi.h"
+
 using namespace std;
 
-extern "C++" int ParMergeSortSM_CPP(double *dist, unsigned long long p,
+extern "C++" int ParMergeSortSM_CPP(int *dist, unsigned long long p,
                         unsigned long long r);
-double *dist;
 
 unsigned long long vertices;
 unsigned long long m_val;
 
-void swap(unsigned long long index1, unsigned long long index2)
+void swap(int *dist, unsigned long long index1, unsigned long long index2)
 {
-        double temp;
+        int temp;
         temp = dist[index1];
         dist[index1] = dist[index2];
         dist[index2] = temp;
 }
-void init()
+
+void init(int *dist)
 {
         unsigned long long i;
         for(i=0;i<vertices;i++)
@@ -33,189 +31,159 @@ void init()
         {
                 randomIndex1 = rand() % vertices;
                 randomIndex2 = rand() % vertices;
-                swap(randomIndex1, randomIndex2);
+                swap(dist, randomIndex1, randomIndex2);
         }
 }
 
-bool verify_array(double *dist, unsigned long long size)
+bool verify_array(int *dist, unsigned long long size)
 {
     unsigned long long i;
     for(i=0;i < size-1; i++)
-    {   
+    {
         if(dist[i] > dist[i+1]) return false;
     }
     return true;
 }
 
-int main(int argc, char **argv) {
 
-        char *arg_vertices = getenv("N_VERTICES");
-	
-        vertices = atoi(arg_vertices);
+int main (int argc, char *argv[])
+{
 
-	dist = new double[vertices];
-	int size, rank;
-
-        int p = 5; 
-	int q = 5;
-
-        int keys_per_node = vertices/p; 
-
-        double *es_keys = NULL;
-        double *sub_es_keys = NULL;
-        double *g_pivots = NULL;
-	double *local_arr;
+	int 	     size,rank, Root = 0;
+	int 	     i,j,k, elem_size, elem_size_local,
+			  NoElementsToSort;
+	int 	     count, temp;
+	int 	     *Input, *InputData;
+	int 	     *Splitter, *AllSplitter;
+	int 	     *Buckets, *BucketBuffer, *LocalBucket;
+	int 	     *OutputBuffer, *Output;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-	local_arr = (double *)malloc(sizeof(double) * keys_per_node); 
-	
-	if (rank == 0) 
-		init();
-
-    	MPI_Scatter(dist, keys_per_node, MPI_DOUBLE, local_arr,
-		keys_per_node, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-	ParMergeSortSM_CPP(local_arr, 0, keys_per_node - 1);
-	//sort(local_arr, local_arr + keys_per_node);
-
-	sub_es_keys  =  (double *)malloc(sizeof(double) *(q - 1));
-
-	int index = keys_per_node / q;
-
-	for (int x = 0; x < q-1; x++) 
-		sub_es_keys[x] = local_arr[(x + 1) * index];
-
-	if (rank == 0) {
-	        es_keys = (double *)malloc(p*(q-1) * sizeof(double));
+	if(argc != 2) {
+	if(rank ==0) printf(" Usage : run size\n");
+		MPI_Finalize();
+		 exit(0);
 	}
 
-	MPI_Gather(sub_es_keys, q - 1, MPI_DOUBLE, es_keys, (q - 1),
-			 MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	if (rank == Root){
+
+		elem_size = atoi(argv[1]);
+
+		Input = new int[elem_size];
+
+		vertices = elem_size;
+		init(Input);
+	}
+
+	MPI_Bcast (&elem_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	
+	elem_size_local = elem_size / size;
+	InputData = (int *) malloc (elem_size_local * sizeof (int));
+
+	MPI_Scatter(Input, elem_size_local, MPI_INT, InputData, 
+			  elem_size_local, MPI_INT, Root, MPI_COMM_WORLD);
+
+	ParMergeSortSM_CPP(InputData, 0, elem_size_local - 1);
 	
 
-	g_pivots = (double *)malloc((size - 1) * sizeof(double));
+	Splitter = (int *) malloc (sizeof (int) * (size-1));
+	for (i=0; i< (size-1); i++){
+		Splitter[i] = InputData[elem_size/(size*size) * (i+1)];
+	} 
 
-	if (rank == 0) {
-	
-		//sort(es_keys, es_keys  + (p * (q-1)));
-		ParMergeSortSM_CPP(es_keys, 0, (p * (q-1)) - 1);
-	
-	        int stride = q - 1;
+	AllSplitter = (int *) malloc (sizeof (int) * size * (size-1));
+	MPI_Gather (Splitter, size-1, MPI_INT, AllSplitter, size-1, 
+			  MPI_INT, Root, MPI_COMM_WORLD);
 
-	        for (int i = 0; i < size - 1; i++) {
-        	        g_pivots[i] = es_keys[(i + 1) * stride - 1];
+	if (rank == Root){
+		ParMergeSortSM_CPP(AllSplitter,0, size*(size-1) - 1);
+		for (i=0; i<size-1; i++)
+			Splitter[i] = AllSplitter[(size-1)*(i+1)];
+	}
+
+	MPI_Bcast (Splitter, size-1, MPI_INT, 0, MPI_COMM_WORLD);
+
+	Buckets = (int *) malloc (sizeof (int) * (elem_size + size));
+
+	j = 0;
+	k = 1;
+
+	for (i=0; i<elem_size_local; i++){
+		if(j < (size-1)){
+			if (InputData[i] < Splitter[j]) 
+		 		Buckets[((elem_size_local + 1) * j) + k++] = InputData[i]; 
+			else{
+ 	  	      	Buckets[(elem_size_local + 1) * j] = k-1;
+	    		k=1;
+		 	j++;
+		        i--;
+			}	
 		}
+		else 
+			Buckets[((elem_size_local + 1) * j) + k++] = InputData[i];
 	}
 
-	MPI_Bcast(g_pivots, size - 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	Buckets[(elem_size_local + 1) * j] = k - 1;
 
+	BucketBuffer = (int *) malloc (sizeof (int) * (elem_size + size));
 
-	vector <vector <double> > ans; 
+	MPI_Alltoall (Buckets, elem_size_local + 1, MPI_INT, BucketBuffer, 
+				 elem_size_local + 1, MPI_INT, MPI_COMM_WORLD);
 
-        vector <double> temp;
+	LocalBucket = (int *) malloc (sizeof (int) * 2 * elem_size / size);
 
-	int l = 0;
-	int r = keys_per_node - 1;
+	count = 1;
 
-	int i = 0;
+	for (j=0; j<size; j++) {
+		k = 1;
+		for (i=0; i<BucketBuffer[(elem_size/size + 1) * j]; i++) 
+			LocalBucket[count++] = 
+				BucketBuffer[(elem_size/size + 1) * j + k++];
+	}
+	LocalBucket[0] = count-1;
+
+	NoElementsToSort = LocalBucket[0];
 	
-	while (l <= r) {
-                if (local_arr[l] < g_pivots[i] || i == size - 1) {
-                        temp.push_back(local_arr[l]);
-                        l++;
-                }
-                else {
-                        temp.push_back(g_pivots[i]);
+	ParMergeSortSM_CPP(&LocalBucket[1], 0, NoElementsToSort - 1);
 
-                        if (local_arr[l] == g_pivots[i])
-                                l++;
-
-                        ans.push_back(temp);
-                        temp.resize(0);
-                        i++;
-                }
-        }
-
-        ans.push_back(temp);
-
-        vector <vector <double> > ::iterator it;
-        vector <double> ::iterator iter;
-
-	double **collate = new double*[size];
-	for(int i = 0;i<size; i++)
-		collate[i] = new double[keys_per_node];
-
-	for (int i = 0; i < size; i++) {
-		if (rank != i) {
-			MPI_Send(&ans[i].front(), ans[i].size(), MPI_DOUBLE, i,
-			0, MPI_COMM_WORLD);
-		} else {
-			int j = 0;
-		        vector <double> ::iterator it;
-
-			for (it = ans[i].begin(); it != ans[i].end(); ++it){
-				collate[i][j] = *it;
-				j++;
-			}
-		}
-		
+	if(rank == Root) {
+		OutputBuffer = (int *) malloc (sizeof(int) * 2 * elem_size);
+		Output = (int *) malloc (sizeof (int) * elem_size);
 	}
 
-	for (int i = 0; i < size; i++) {
-		if (rank != i) {
-			MPI_Recv(&collate[i], keys_per_node, MPI_DOUBLE, i, 0,
-			MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	MPI_Gather (LocalBucket, 2*elem_size_local, MPI_INT, OutputBuffer, 
+			  2*elem_size_local, MPI_INT, Root, MPI_COMM_WORLD);
+
+	if (rank == Root){
+		count = 0;
+		for(j=0; j<size; j++){
+  			k = 1;
+ 			for(i=0; i<OutputBuffer[(2 * elem_size/size) * j]; i++) 
+			  Output[count++] = OutputBuffer[(2*elem_size/size) * j + k++];
 		}
-	}
 
-	vector<double> sorted;
-
-	for (int i = 0; i < keys_per_node; i++)
-	{
-		for(int j = 0; j < keys_per_node; j++) {
-			if (collate[i][j] > -1)
-				sorted.push_back(collate[i][j]);
-		}
-	}	
-	for(int i = 0; i < keys_per_node; ++i) {
-    		delete [] collate[i];
-	}
-	delete [] collate;
-	sort(sorted.begin(), sorted.end());
-
-	set<double> uniq(sorted.begin(), sorted.end());
-
-	vector<double> data(uniq.begin(), uniq.end());
-
-	int *counts = new int[size];
-	int nelements = data.size();
-
-	MPI_Gather(&nelements, 1, MPI_INT, counts, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-	int *disps = new int[size];
-
-	for (int i = 0; i < size; i++)
-		disps[i] = (i > 0) ? (disps[i-1] + counts[i-1]) : 0;
-
-	double *alldata = NULL;
-	if (rank == 0)
-  		alldata = new double[disps[size-1]+counts[size-1]];
-
-
-	MPI_Gatherv(&data[0], nelements, MPI_DOUBLE,
-            alldata, counts, disps, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-	if (rank == 0) {
-		if (false == verify_array(alldata, vertices))
-			cout << "Alert: Not Sorted " << endl;
+		if (false == verify_array(Output, elem_size))
+			cout << "Alert:  sort went wrong " << endl;
 		else
-			cout << " Sort Successfull " << endl << endl;
+			cout << "Sort Successfull " << endl;
+
+		free(Input);
+		free(OutputBuffer);
+		free(Output);
 	}
+
+	free(InputData);
+	free(Splitter);
+	free(AllSplitter);
+	free(Buckets);
+	free(BucketBuffer);
+	free(LocalBucket);
 
 	MPI_Finalize();
-
-	return 0;
 }
+
+
+
