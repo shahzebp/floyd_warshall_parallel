@@ -2,26 +2,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "mpi.h"
 
 using namespace std;
 
-extern "C++" int ParMergeSortSM_CPP(int *dist, unsigned long long p,
+extern "C++" int ParMergeSortSM_CPP(double *dist, unsigned long long p,
                         unsigned long long r);
 
 unsigned long long vertices;
 unsigned long long m_val;
 
-void swap(int *dist, unsigned long long index1, unsigned long long index2)
+void swap(double *dist, unsigned long long index1, unsigned long long index2)
 {
-        int temp;
+        double temp;
         temp = dist[index1];
         dist[index1] = dist[index2];
         dist[index2] = temp;
 }
 
-void Fill_Array(int *dist)
+void Fill_Array(double *dist)
 {
         unsigned long long i;
         for(i=0;i<vertices;i++)
@@ -35,9 +36,10 @@ void Fill_Array(int *dist)
         }
 }
 
-bool verify_array(int *dist, unsigned long long size)
+bool verify_array(double *dist, unsigned long long size)
 {
     unsigned long long i;
+ 
     for(i=0;i < size-1; i++)
     {
         if(dist[i] > dist[i+1]) return false;
@@ -48,14 +50,17 @@ bool verify_array(int *dist, unsigned long long size)
 
 int main (int argc, char *argv[])
 {
+        struct timeval tvalBefore, tvalAfter;
+
+
 	int 	     size,rank, master = 0;
-	int 	     i,j,k, elem_size, elem_size_local,
-			  elem_to_sort;
-	int 	     count, temp;
-	int 	     *arr, *per_proc_arr;
-	int 	     *es_keys, *gs_pivots;
-	int 	     *buckets, *bucket_arr, *LocalBucket;
-	int 	     *sorted_arr, *final;
+	unsigned long long 	     i,j,k, elem_size, elem_size_local,
+			  elem_to_sort, count, temp;
+	
+	double 	     *arr, *per_proc_arr;
+	double 	     *es_keys, *gs_pivots;
+	double 	     *buckets, *bucket_arr, *per_proc_bucket;
+	double 	     *sorted_arr, *final_arr;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -65,30 +70,40 @@ int main (int argc, char *argv[])
 
 		elem_size = atoi(argv[1]);
 
-		arr = new int[elem_size];
+		arr = new double[elem_size];
 
 		vertices = elem_size;
 
 		Fill_Array(arr);
+	
+		gettimeofday (&tvalBefore, NULL);
 	}
+
 
 	MPI_Bcast (&elem_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	
 	elem_size_local = elem_size / size;
-	per_proc_arr = new int[elem_size_local];
+	per_proc_arr = new double[elem_size_local];
 
 	MPI_Scatter(arr, elem_size_local, MPI_INT, per_proc_arr, 
 			  elem_size_local, MPI_INT, master, MPI_COMM_WORLD);
 
-	ParMergeSortSM_CPP(per_proc_arr, 0, elem_size_local - 1);
+        struct timeval *innerBefore = new struct timeval();
 	
+	if (rank == master){
+		gettimeofday (innerBefore, NULL);
+	}
 
-	es_keys = new int[(size-1)];
+
+	ParMergeSortSM_CPP(per_proc_arr, 0, elem_size_local - 1);
+
+	es_keys = new double[(size-1)];
+
 	for (i=0; i< (size-1); i++){
 		es_keys[i] = per_proc_arr[elem_size/(size*size) * (i+1)];
 	} 
 
-	gs_pivots = new int[size * (size-1)];
+	gs_pivots = new double[size * (size-1)];
 
 	MPI_Gather (es_keys, size-1, MPI_INT, gs_pivots, size-1, 
 			  MPI_INT, master, MPI_COMM_WORLD);
@@ -101,7 +116,7 @@ int main (int argc, char *argv[])
 
 	MPI_Bcast (es_keys, size-1, MPI_INT, 0, MPI_COMM_WORLD);
 
-	buckets = (int *) malloc (sizeof (int) * (elem_size + size));
+	buckets = new double[elem_size + size];;
 
 	j = 0;
 	k = 1;
@@ -123,34 +138,44 @@ int main (int argc, char *argv[])
 
 	buckets[(elem_size_local + 1) * j] = k - 1;
 
-	bucket_arr = new int[elem_size + size];
+	bucket_arr = new double[elem_size + size];
 
 	MPI_Alltoall (buckets, elem_size_local + 1, MPI_INT, bucket_arr, 
 				 elem_size_local + 1, MPI_INT, MPI_COMM_WORLD);
 
-	LocalBucket = new int[2 * elem_size / size];
+	per_proc_bucket = new double[2 * elem_size / size];
 
 	count = 1;
 
 	for (j=0; j<size; j++) {
 		k = 1;
 		for (i=0; i<bucket_arr[(elem_size/size + 1) * j]; i++) 
-			LocalBucket[count++] = 
+			per_proc_bucket[count++] = 
 				bucket_arr[(elem_size/size + 1) * j + k++];
 	}
 
-	LocalBucket[0] = count-1;
+	per_proc_bucket[0] = count-1;
 
-	elem_to_sort = LocalBucket[0];
+	elem_to_sort = per_proc_bucket[0];
 	
-	ParMergeSortSM_CPP(&LocalBucket[1], 0, elem_to_sort - 1);
+	ParMergeSortSM_CPP(&per_proc_bucket[1], 0, elem_to_sort - 1);
 
 	if(rank == master) {
-		sorted_arr = new int[2 * elem_size];
-		final = new int[elem_size];
+		sorted_arr = new double[2 * elem_size];
+		final_arr = new double[elem_size];
+
+        	struct timeval *innerAfter = new struct timeval();
+
+		gettimeofday (innerAfter, NULL);
+			
+		printf("Inner Time: %ld microseconds\n",
+            		((innerAfter->tv_sec - innerBefore->tv_sec)*1000000L
+           		+ innerAfter->tv_usec) - innerBefore->tv_usec);
+		
+
 	}
 
-	MPI_Gather (LocalBucket, 2*elem_size_local, MPI_INT, sorted_arr, 
+	MPI_Gather (per_proc_bucket, 2*elem_size_local, MPI_INT, sorted_arr, 
 			  2*elem_size_local, MPI_INT, master, MPI_COMM_WORLD);
 
 	if (rank == master){
@@ -158,13 +183,21 @@ int main (int argc, char *argv[])
 		for(j=0; j<size; j++){
   			k = 1;
  			for(i=0; i<sorted_arr[(2 * elem_size/size) * j]; i++) 
-			  final[count++] = sorted_arr[(2*elem_size/size) * j + k++];
+			  final_arr[count++] = sorted_arr[(2*elem_size/size) * j + k++];
 		}
 
-		if (false == verify_array(final, elem_size))
+		gettimeofday (&tvalAfter, NULL);
+		
+		printf("Time: %ld microseconds\n",
+            		((tvalAfter.tv_sec - tvalBefore.tv_sec)*1000000L
+           		+tvalAfter.tv_usec) - tvalBefore.tv_usec
+          		);
+
+		if (false == verify_array(final_arr, elem_size))
 			cout << "Alert:  sort went wrong " << endl;
 		else
 			cout << "Sort Successfull " << endl;
+
 
 	}
 

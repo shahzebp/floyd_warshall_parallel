@@ -1,2 +1,4 @@
-cilk++ -m64 -fPIC -shared -o libncr.so ParMergeSM.cilk
-mpicxx mpi.cpp  -L. -L$CILKHOME/lib64 -Wl, -rpath=. -lncr -lcilk_main -lcilkrts -lcilkutil
+rm Test.*
+
+cilk++ -m64 -fPIC -shared -o libspm.so ParMergeSM.cilk
+mpicxx mpi.cpp  -L. -L$CILKHOME/lib64 -Wl, -lspm -lcilk_main -lcilkrts -lcilkutil

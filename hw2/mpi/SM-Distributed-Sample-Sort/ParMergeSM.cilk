@@ -6,15 +6,15 @@ using namespace std;
 
 #define m_val 225
 
-void merge(int *dist, unsigned long long l, unsigned long long m, unsigned long long r)
+void merge(double *dist, unsigned long long l, unsigned long long m, unsigned long long r)
 {
     unsigned long long i, j, k; 
     unsigned long long n1 = m - l + 1;
     unsigned long long n2 =  r - m;
 
-    int *L, *R;
-    L = new int[n1];
-    R = new int[n2];
+    double *L, *R;
+    L = new double[n1];
+    R = new double[n2];
 
     for (i = 0; i < n1; i++)
         L[i] = dist[l + i];
@@ -54,10 +54,10 @@ void merge(int *dist, unsigned long long l, unsigned long long m, unsigned long 
     delete [] R;
 }
 
-void insertionSort(int *dist, unsigned long long l, unsigned long long r)
+void insertionSort(double *dist, unsigned long long l, unsigned long long r)
 {
    unsigned long long i, j;
-   int key;
+   double key;
    for (i = l + 1; i < r; i++)
    {
        key = dist[i];
@@ -73,7 +73,7 @@ void insertionSort(int *dist, unsigned long long l, unsigned long long r)
    }
 }
 
-void ParMergeSortSM(int *dist, unsigned long long p, unsigned long long r)
+void ParMergeSortSM(double *dist, unsigned long long p, unsigned long long r)
 {
         unsigned long long n = r - p + 1;
         
@@ -88,7 +88,7 @@ void ParMergeSortSM(int *dist, unsigned long long p, unsigned long long r)
         }
 }
 
-extern "C++" int ParMergeSortSM_CPP(int *dist, unsigned long long p, unsigned long long r)
+extern "C++" int ParMergeSortSM_CPP(double *dist, unsigned long long p, unsigned long long r)
 {
 	return cilk::run(ParMergeSortSM, dist, p, r);
 }
