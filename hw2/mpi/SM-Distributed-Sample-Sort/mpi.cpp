@@ -21,7 +21,7 @@ void swap(int *dist, unsigned long long index1, unsigned long long index2)
         dist[index2] = temp;
 }
 
-void init(int *dist)
+void Fill_Array(int *dist)
 {
         unsigned long long i;
         for(i=0;i<vertices;i++)
@@ -48,139 +48,125 @@ bool verify_array(int *dist, unsigned long long size)
 
 int main (int argc, char *argv[])
 {
-
-	int 	     size,rank, Root = 0;
+	int 	     size,rank, master = 0;
 	int 	     i,j,k, elem_size, elem_size_local,
-			  NoElementsToSort;
+			  elem_to_sort;
 	int 	     count, temp;
-	int 	     *Input, *InputData;
-	int 	     *Splitter, *AllSplitter;
-	int 	     *Buckets, *BucketBuffer, *LocalBucket;
-	int 	     *OutputBuffer, *Output;
+	int 	     *arr, *per_proc_arr;
+	int 	     *es_keys, *gs_pivots;
+	int 	     *buckets, *bucket_arr, *LocalBucket;
+	int 	     *sorted_arr, *final;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-	if(argc != 2) {
-	if(rank ==0) printf(" Usage : run size\n");
-		MPI_Finalize();
-		 exit(0);
-	}
-
-	if (rank == Root){
+	if (rank == master){
 
 		elem_size = atoi(argv[1]);
 
-		Input = new int[elem_size];
+		arr = new int[elem_size];
 
 		vertices = elem_size;
-		init(Input);
+
+		Fill_Array(arr);
 	}
 
 	MPI_Bcast (&elem_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	
 	elem_size_local = elem_size / size;
-	InputData = (int *) malloc (elem_size_local * sizeof (int));
+	per_proc_arr = new int[elem_size_local];
 
-	MPI_Scatter(Input, elem_size_local, MPI_INT, InputData, 
-			  elem_size_local, MPI_INT, Root, MPI_COMM_WORLD);
+	MPI_Scatter(arr, elem_size_local, MPI_INT, per_proc_arr, 
+			  elem_size_local, MPI_INT, master, MPI_COMM_WORLD);
 
-	ParMergeSortSM_CPP(InputData, 0, elem_size_local - 1);
+	ParMergeSortSM_CPP(per_proc_arr, 0, elem_size_local - 1);
 	
 
-	Splitter = (int *) malloc (sizeof (int) * (size-1));
+	es_keys = new int[(size-1)];
 	for (i=0; i< (size-1); i++){
-		Splitter[i] = InputData[elem_size/(size*size) * (i+1)];
+		es_keys[i] = per_proc_arr[elem_size/(size*size) * (i+1)];
 	} 
 
-	AllSplitter = (int *) malloc (sizeof (int) * size * (size-1));
-	MPI_Gather (Splitter, size-1, MPI_INT, AllSplitter, size-1, 
-			  MPI_INT, Root, MPI_COMM_WORLD);
+	gs_pivots = new int[size * (size-1)];
 
-	if (rank == Root){
-		ParMergeSortSM_CPP(AllSplitter,0, size*(size-1) - 1);
+	MPI_Gather (es_keys, size-1, MPI_INT, gs_pivots, size-1, 
+			  MPI_INT, master, MPI_COMM_WORLD);
+
+	if (rank == master){
+		ParMergeSortSM_CPP(gs_pivots,0, size*(size-1) - 1);
 		for (i=0; i<size-1; i++)
-			Splitter[i] = AllSplitter[(size-1)*(i+1)];
+			es_keys[i] = gs_pivots[(size-1)*(i+1)];
 	}
 
-	MPI_Bcast (Splitter, size-1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast (es_keys, size-1, MPI_INT, 0, MPI_COMM_WORLD);
 
-	Buckets = (int *) malloc (sizeof (int) * (elem_size + size));
+	buckets = (int *) malloc (sizeof (int) * (elem_size + size));
 
 	j = 0;
 	k = 1;
 
 	for (i=0; i<elem_size_local; i++){
 		if(j < (size-1)){
-			if (InputData[i] < Splitter[j]) 
-		 		Buckets[((elem_size_local + 1) * j) + k++] = InputData[i]; 
+			if (per_proc_arr[i] < es_keys[j]) 
+		 		buckets[((elem_size_local + 1) * j) + k++] = per_proc_arr[i]; 
 			else{
- 	  	      	Buckets[(elem_size_local + 1) * j] = k-1;
+ 	  	      	buckets[(elem_size_local + 1) * j] = k-1;
 	    		k=1;
 		 	j++;
 		        i--;
 			}	
 		}
 		else 
-			Buckets[((elem_size_local + 1) * j) + k++] = InputData[i];
+			buckets[((elem_size_local + 1) * j) + k++] = per_proc_arr[i];
 	}
 
-	Buckets[(elem_size_local + 1) * j] = k - 1;
+	buckets[(elem_size_local + 1) * j] = k - 1;
 
-	BucketBuffer = (int *) malloc (sizeof (int) * (elem_size + size));
+	bucket_arr = new int[elem_size + size];
 
-	MPI_Alltoall (Buckets, elem_size_local + 1, MPI_INT, BucketBuffer, 
+	MPI_Alltoall (buckets, elem_size_local + 1, MPI_INT, bucket_arr, 
 				 elem_size_local + 1, MPI_INT, MPI_COMM_WORLD);
 
-	LocalBucket = (int *) malloc (sizeof (int) * 2 * elem_size / size);
+	LocalBucket = new int[2 * elem_size / size];
 
 	count = 1;
 
 	for (j=0; j<size; j++) {
 		k = 1;
-		for (i=0; i<BucketBuffer[(elem_size/size + 1) * j]; i++) 
+		for (i=0; i<bucket_arr[(elem_size/size + 1) * j]; i++) 
 			LocalBucket[count++] = 
-				BucketBuffer[(elem_size/size + 1) * j + k++];
+				bucket_arr[(elem_size/size + 1) * j + k++];
 	}
+
 	LocalBucket[0] = count-1;
 
-	NoElementsToSort = LocalBucket[0];
+	elem_to_sort = LocalBucket[0];
 	
-	ParMergeSortSM_CPP(&LocalBucket[1], 0, NoElementsToSort - 1);
+	ParMergeSortSM_CPP(&LocalBucket[1], 0, elem_to_sort - 1);
 
-	if(rank == Root) {
-		OutputBuffer = (int *) malloc (sizeof(int) * 2 * elem_size);
-		Output = (int *) malloc (sizeof (int) * elem_size);
+	if(rank == master) {
+		sorted_arr = new int[2 * elem_size];
+		final = new int[elem_size];
 	}
 
-	MPI_Gather (LocalBucket, 2*elem_size_local, MPI_INT, OutputBuffer, 
-			  2*elem_size_local, MPI_INT, Root, MPI_COMM_WORLD);
+	MPI_Gather (LocalBucket, 2*elem_size_local, MPI_INT, sorted_arr, 
+			  2*elem_size_local, MPI_INT, master, MPI_COMM_WORLD);
 
-	if (rank == Root){
+	if (rank == master){
 		count = 0;
 		for(j=0; j<size; j++){
   			k = 1;
- 			for(i=0; i<OutputBuffer[(2 * elem_size/size) * j]; i++) 
-			  Output[count++] = OutputBuffer[(2*elem_size/size) * j + k++];
+ 			for(i=0; i<sorted_arr[(2 * elem_size/size) * j]; i++) 
+			  final[count++] = sorted_arr[(2*elem_size/size) * j + k++];
 		}
 
-		if (false == verify_array(Output, elem_size))
+		if (false == verify_array(final, elem_size))
 			cout << "Alert:  sort went wrong " << endl;
 		else
 			cout << "Sort Successfull " << endl;
 
-		free(Input);
-		free(OutputBuffer);
-		free(Output);
 	}
-
-	free(InputData);
-	free(Splitter);
-	free(AllSplitter);
-	free(Buckets);
-	free(BucketBuffer);
-	free(LocalBucket);
 
 	MPI_Finalize();
 }
