@@ -1,0 +1,33 @@
+cilkview: running with 16 workers
+43953 millseconds
+cilkview: running with 15 workers
+45233 millseconds
+cilkview: running with 14 workers
+46242 millseconds
+cilkview: running with 13 workers
+47861 millseconds
+cilkview: running with 12 workers
+47948 millseconds
+cilkview: running with 11 workers
+49671 millseconds
+cilkview: running with 10 workers
+52858 millseconds
+cilkview: running with 9 workers
+53742 millseconds
+cilkview: running with 8 workers
+58608 millseconds
+cilkview: running with 7 workers
+62475 millseconds
+cilkview: running with 6 workers
+68554 millseconds
+cilkview: running with 5 workers
+75635 millseconds
+cilkview: running with 4 workers
+86345 millseconds
+cilkview: running with 3 workers
+110296 millseconds
+cilkview: running with 2 workers
+151250 millseconds
+cilkview: running with 1 workers
+267561 millseconds
+cilkview: generating scalability data
