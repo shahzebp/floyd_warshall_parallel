@@ -97,6 +97,7 @@ int main (int argc, char *argv[])
 		gettimeofday (innerBefore, NULL);
 	}
 
+	memcpy(temp_per_proc_arr, per_proc_arr, elem_size_local);
 
 	ParMergeSortPM_CPP(per_proc_arr, temp_per_proc_arr, 0, elem_size_local - 1);
 
@@ -108,6 +109,8 @@ int main (int argc, char *argv[])
 
 	gs_pivots = new double[size * (size-1)];
 	temp_gs_pivots = new double[size * (size-1)];
+
+	memcpy(temp_gs_pivots, gs_pivots, size * (size-1));
 
 	MPI_Gather (es_keys, size-1, MPI_INT, gs_pivots, size-1, 
 			  MPI_INT, master, MPI_COMM_WORLD);
@@ -162,6 +165,8 @@ int main (int argc, char *argv[])
 	per_proc_bucket[0] = count-1;
 
 	elem_to_sort = per_proc_bucket[0];
+
+	memcpy(&per_proc_bucket[1], &temp_per_proc_bucket[1], elem_to_sort);
 	
 	ParMergeSortPM_CPP(&per_proc_bucket[1], &temp_per_proc_bucket[1], 0, elem_to_sort - 1);
 
