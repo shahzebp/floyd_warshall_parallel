@@ -10,4 +10,4 @@ export CILK_NWORKERS=16
 rm *.csv *.plt Test*
 
 export N_VERTICES=1073741824
-M_VAL=256 cilkview -trials all 16 PMSSM >> PMSSM_out
+cilkview -trials all 16 PMSPM >> PMSPM_out
