@@ -52,17 +52,16 @@ int main (int argc, char *argv[])
 {
         struct timeval tvalBefore, tvalAfter;
 
-
 	int 	     size,rank, master = 0;
 	unsigned long long 	     i,j,k, elem_size, elem_size_local,
-			  elem_to_sort, count, temp;
+			  elem_to_sort, count, temp = 0;
 	
-	double 	     *arr, *per_proc_arr;
-	double 	     *es_keys, *gs_pivots;
-	double 	     *buckets, *bucket_arr, *per_proc_bucket;
-	double 	     *sorted_arr, *final_arr;
+	double 	     *arr, *per_proc_arr = NULL;
+	double 	     *es_keys, *gs_pivots = NULL;
+	double 	     *buckets, *bucket_arr, *per_proc_bucket =  NULL;
+	double 	     *sorted_arr, *final_arr = NULL;
 
-	double 	     *temp_per_proc_arr, *temp_gs_pivots, *temp_per_proc_bucket;
+	double 	     *temp_per_proc_arr, *temp_gs_pivots, *temp_per_proc_bucket = NULL;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -82,14 +81,14 @@ int main (int argc, char *argv[])
 	}
 
 
-	MPI_Bcast (&elem_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast (&elem_size, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 	
 	elem_size_local = elem_size / size;
 	per_proc_arr = new double[elem_size_local];
 	temp_per_proc_arr = new double[elem_size_local];
 
-	MPI_Scatter(arr, elem_size_local, MPI_INT, per_proc_arr, 
-			  elem_size_local, MPI_INT, master, MPI_COMM_WORLD);
+	MPI_Scatter(arr, elem_size_local, MPI_DOUBLE, per_proc_arr, 
+			  elem_size_local, MPI_DOUBLE, master, MPI_COMM_WORLD);
 
         struct timeval *innerBefore = new struct timeval();
 	
@@ -112,8 +111,8 @@ int main (int argc, char *argv[])
 
 	memcpy(temp_gs_pivots, gs_pivots, size * (size-1));
 
-	MPI_Gather (es_keys, size-1, MPI_INT, gs_pivots, size-1, 
-			  MPI_INT, master, MPI_COMM_WORLD);
+	MPI_Gather (es_keys, size-1, MPI_DOUBLE, gs_pivots, size-1, 
+			  MPI_DOUBLE, master, MPI_COMM_WORLD);
 
 	if (rank == master){
 		ParMergeSortPM_CPP(gs_pivots, temp_gs_pivots, 0, size*(size-1) - 1);
@@ -121,7 +120,7 @@ int main (int argc, char *argv[])
 			es_keys[i] = gs_pivots[(size-1)*(i+1)];
 	}
 
-	MPI_Bcast (es_keys, size-1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast (es_keys, size-1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 	buckets = new double[elem_size + size];;
 
@@ -147,8 +146,8 @@ int main (int argc, char *argv[])
 
 	bucket_arr = new double[elem_size + size];
 
-	MPI_Alltoall (buckets, elem_size_local + 1, MPI_INT, bucket_arr, 
-				 elem_size_local + 1, MPI_INT, MPI_COMM_WORLD);
+	MPI_Alltoall (buckets, elem_size_local + 1, MPI_DOUBLE, bucket_arr, 
+				 elem_size_local + 1, MPI_DOUBLE, MPI_COMM_WORLD);
 
 	per_proc_bucket = new double[2 * elem_size / size];
 	temp_per_proc_bucket = new double[2 * elem_size / size];
@@ -185,8 +184,8 @@ int main (int argc, char *argv[])
 
 	}
 
-	MPI_Gather (per_proc_bucket, 2*elem_size_local, MPI_INT, sorted_arr, 
-			  2*elem_size_local, MPI_INT, master, MPI_COMM_WORLD);
+	MPI_Gather (per_proc_bucket, 2*elem_size_local, MPI_DOUBLE, sorted_arr, 
+			  2*elem_size_local, MPI_DOUBLE, master, MPI_COMM_WORLD);
 
 	if (rank == master){
 		count = 0;
