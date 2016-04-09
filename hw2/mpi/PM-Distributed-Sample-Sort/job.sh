@@ -12,5 +12,5 @@ export LD_LIBRARY_PATH=$HOME/cilk/lib64/:$PWD:$LD_LIBRARY_PATH
 
 for i in 97613000 #195226700 #292839600 390452500 488065400 683291200 780904100 878517000 976129900 1073741800
 do 
-	ibrun tacc_affinity a.out $i >> DSTTime
+	ibrun tacc_affinity a.out 2500 >> DSTTime
 done

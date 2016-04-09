@@ -8,7 +8,7 @@
 
 using namespace std;
 
-extern "C++" int ParMergeSortPM_CPP(double *dist, unsigned long long p,
+extern "C++" int ParMergeSortPM_CPP(double *dist, double *temp, unsigned long long p,
                         unsigned long long r);
 
 unsigned long long vertices;

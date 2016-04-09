@@ -87,13 +87,13 @@ int main (int argc, char *argv[])
 
 	MPI_Scatter(arr, elem_size_local, MPI_INT, per_proc_arr, 
 			  elem_size_local, MPI_INT, master, MPI_COMM_WORLD);
-
+/*
         struct timeval *innerBefore = new struct timeval();
 	
 	if (rank == master){
 		gettimeofday (innerBefore, NULL);
 	}
-
+*/
 
 	ParMergeSortSM_CPP(per_proc_arr, 0, elem_size_local - 1);
 
@@ -160,14 +160,10 @@ int main (int argc, char *argv[])
 	
 	ParMergeSortSM_CPP(&per_proc_bucket[1], 0, elem_to_sort - 1);
 
-	delete[] arr;
-	delete[] per_proc_arr;
-	delete[] bucket_arr;
-		
 	if(rank == master) {
 		sorted_arr = new double[2 * elem_size];
 		final_arr = new double[elem_size];
-
+		/*
         	struct timeval *innerAfter = new struct timeval();
 
 		gettimeofday (innerAfter, NULL);
@@ -175,8 +171,7 @@ int main (int argc, char *argv[])
 		printf("Inner Time: %ld microseconds\n",
             		((innerAfter->tv_sec - innerBefore->tv_sec)*1000000L
            		+ innerAfter->tv_usec) - innerBefore->tv_usec);
-		
-
+		*/
 	}
 
 	MPI_Gather (per_proc_bucket, 2*elem_size_local, MPI_INT, sorted_arr, 
