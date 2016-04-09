@@ -74,6 +74,27 @@ void insertionSort(double *dist, unsigned long long l, unsigned long long r)
    }
 }
 
+unsigned long long BinarySearch(double *temp, unsigned long long key, unsigned long long p2, unsigned long long r2)
+{
+    unsigned long long m;
+    unsigned long long l = p2;
+    unsigned long long r = max(l, r2 + 1);
+    while( r > l)
+    {
+        m = l + (r-l)/2;
+
+                if( temp[m] <= key && temp[m+1] > key)
+                        return m+1;
+
+                if (temp[m] > key)
+                        r = m;
+                else
+                        l = m+1;
+        }
+        return r;
+}
+
+
 void ParMerge(double *dist, double *temp, unsigned long long p1, unsigned long long r1, unsigned long long p2, unsigned long long r2, unsigned long long p3)
 {
     unsigned long long n1 = r1 - p1 + 1;
@@ -111,27 +132,6 @@ void ParMerge(double *dist, double *temp, unsigned long long p1, unsigned long l
         cilk_sync;
     }
 }
-
-unsigned long long BinarySearch(double *temp, unsigned long long key, unsigned long long p2, unsigned long long r2)
-{
-    unsigned long long m;
-    unsigned long long l = p2;
-    unsigned long long r = max(l, r2 + 1);
-    while( r > l)
-    {
-        m = l + (r-l)/2;
-
-                if( temp[m] <= key && temp[m+1] > key)
-                        return m+1;
-
-                if (temp[m] > key)
-                        r = m;
-                else
-                        l = m+1;
-        }
-        return r;
-}
-
 void ParMergeSortPM(double *dist, double *temp, unsigned long long p, unsigned long long r)
 {
     unsigned long long n = r - p + 1;
